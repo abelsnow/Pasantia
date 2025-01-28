@@ -54,3 +54,4 @@ package.json
 *.venv
 
 odoo/
+venv/

@@ -43,30 +43,34 @@
                             </group>
                         </page>
                     </notebook>
-                
+                    <group name="name" string="Ofertas">
+                        <field name="offer_ids" widget="many2many"/>
+                    </group>
                     <group>
-                        <group name="name" string="Basic information">
-                            <field name="name" string= 'Property Name'/>
-                            <field name="description" string= 'Description'/>
-                            <field name="postcode" string= 'Postal Code'/>
+                        <group name="name" string="Informacion basica">
+                            <field name="name" string= 'Nombre de la propiedad'/>
+                            <field name="description" string= 'Descripcion'/>
+                            <field name="postcode" string= 'Codigo postal'/>
                         </group>
 
-                        <group name="name" string="Price Details">
-                            <field name="expected_price" string= 'Expected Price'/>
-                            <field name="selling_price" string= 'Selling Price'/> 
+                        <group name="name" string="Detalles de los precios">
+                            <field name="expected_price" string= 'Precio Esperado'/>
+                            <field name="selling_price" string= 'Precio a la venta'/> 
+                            <field name="best_price" string= 'Mejor Oferta'/>
                         </group>
 
-                        <group name="name" string="Rooms info">
-                            <field name="bedrooms" string= 'Bedrooms'/>
+                        <group name="name" string="Informacion de Habitaciones">
+                            <field name="bedrooms" string= 'Habitaciones'/>
                             <field name="living_area" string= 'Living Area'/>
                             <field name="facades" string= 'Facades'/>
                             <field name="garage" string= 'Garage'/>
                         </group>
                       
-                        <group name="name" string="Garden info">
-                            <field name="garden" string='Garden'/>
-                            <field name="garden_area" string='Garden Area'/>
-                            <field name="garden_orientation" string='Garden Orientation'/>
+                        <group name="name" string="Informacion del Patio">
+                            <field name="garden" string='Patio'/>
+                            <field name="garden_area" string='Area del patio'/>
+                            <field name="garden_orientation" string='Orientacion del Patio'/>
+                            <field name="total_area" string= 'Area total'/>
                         </group>
 
                         <group name="name" string="Property Availability">
@@ -76,8 +80,7 @@
                         </group>
                         <group name="Tags/Type" string="Tags/Type">
                             <field name="tag_ids" widget='many2many_tags'/>
-                            <field name="type_id" widget="many2one"/> 
-                            <field name="offer_ids" widget= "many2many"/>     
+                            <field name="type_id" widget="many2one"/>     
                         </group>
                     </group>
                 </sheet>
@@ -132,6 +135,8 @@
                 <field name="status"/>
                 <field name="partner_id"/>
                 <field name="property_id"/>
+                <field name="validity" />
+                <field name="date_deadline" />
             </tree>
         </field>
     </record>

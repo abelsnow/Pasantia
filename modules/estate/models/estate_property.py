@@ -1,4 +1,4 @@
-from odoo import fields, models
+from odoo import api,fields, models
 from datetime import datetime, timedelta
 
 class EstateProperty(models.Model):
@@ -17,7 +17,7 @@ class EstateProperty(models.Model):
     living_area = fields.Integer()
     facades = fields.Integer()
     garage = fields.Boolean()
-    garden = fields.Boolean()
+    garden = fields.Boolean(default=False)
     garden_area = fields.Integer()
     garden_orientation = fields.Selection([
         ('north', 'North'),
@@ -36,6 +36,25 @@ class EstateProperty(models.Model):
     tag_ids = fields.Many2many('estate.property.tag', string='Tags')
     type_id = fields.Many2one('estate.property.type', string='Property Type')
     offer_ids = fields.One2many('estate.property.offer', 'property_id', string='Offers')
+    best_price = fields.Float(compute='_compute_best_price',string='Mejor Precio', store=True)
+    total_area = fields.Float(compute='_compute_total_area',string= 'Total Area', store=True)
+    
+    @api.depends('living_area', 'garden_area')
+    def _compute_total_area(self):
+        for record in self:
+            record.total_area = record.living_area + record.garden_area 
+    @api.depends('offer_ids.price')
+    def _compute_best_price(self):
+        for record in self:
+            record.best_price = min(record.offer_ids.mapped('price')) if record.offer_ids else 0.0
+    @api.onchange('garden')
+    def _onchange_garden(self):
+        if self.garden:
+            self.garden_orientation = 'north'
+            self.garden_area = 10
+        else:
+            self.garden_orientation = False
+            self.garden_area = 0
 
 class EstatePropertyTag(models.Model):
     _name = 'estate.property.tag'
@@ -58,16 +77,18 @@ class Offer(models.Model):
     ], copy=False)
     partner_id = fields.Many2one('res.partner', string='Partner', required=True)
     property_id = fields.Many2one('estate.property', required=True)
-
-
-class TestComputed(models.Model):
-    _name = 'test.computed'
-    _description = 'Test Computed'
-
-    total = fields.Float(compute='_compute_total')
-    ammount = fields.Float()
-
-    @api.depends('ammount')
-    def _compute_total(self):
+    validity= fields.Integer(string='Validity (days)', default=7)
+    date_deadline= fields.Date(string='Deadline', inverse='_compute_deadline', store=True)
+    @api.depends('create_date', 'validity')
+    def _compute_deadline(self):
         for record in self:
-            record.total = 2.0 * record.amount  
+            if record.create_date:
+                record.date_deadline = record.create_date + timedelta(days=record.validity)
+            else:
+                record.date_deadline=False
+    def inverse_date_deadline(self):
+        for record in self:
+           if record.date_deadline and record.create_date:
+            record.validity = (record.date_deadline - record.create_date).days 
+        else:
+            record.validity= 0
