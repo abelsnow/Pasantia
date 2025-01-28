@@ -1,0 +1,5 @@
+# Ignorar archivo de entorno
+.env
+
+# Ignorar carpetas específicas
+odoo/
