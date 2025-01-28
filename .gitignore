@@ -3,3 +3,4 @@
 
 # Ignorar carpetas específicas
 odoo/
+env/
