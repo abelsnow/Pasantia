@@ -52,6 +52,7 @@
                                 <field name="garden"/>
                                 <field name="garden_area"/>
                                 <field name="garden_orientation"/>
+                                <field name="total_area"/>
                             </group>
                             <group string="Habitaciones de la casa">            
                                 <field name="bedrooms"/>
@@ -73,6 +74,7 @@
                             <group name="info" string="Información de Venta">
                                 <field name="vendedor_id" string="Vendedor"/>
                                 <field name="comprador_id" string="Comprador"/>
+                                <field name="best_price" string="Mejor Oferta"/>
                                 <field name="offer_ids" widget="many2many"/>
                             </group>
                         </page>
@@ -115,6 +117,8 @@
             <tree string="Ofertas">
                 <field name="price" string="Precio"/>
                 <field name="status" string="Estado"/>
+                <field name="validity" string="Validez"/>
+                <field name="date_deadline" string="Fecha limite"/>
                 <field name="partner_id" string="SocioID"/>
                 <field name="property_id" string="PropiedadID"/>
             </tree>
