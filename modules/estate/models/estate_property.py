@@ -1,12 +1,13 @@
 from odoo import api,fields, models
 from datetime import datetime, timedelta
-
+from odoo.exceptions import UserError,ValidationError
 class EstateProperty(models.Model):
     _name = 'estate.property'
     _description = 'Estate Property'
+    _order= 'id desc'
     
     name = fields.Char(required=True)
-    buyer_id = fields.Many2one('res.users', string='Buyer', copy=False)
+    buyer_id = fields.Many2one('res.partner', string='Buyer', copy=False)
     salesperson_id = fields.Many2one('res.users', string='Salesperson', default=lambda self: self.env.user)
     description = fields.Char()
     postcode = fields.Char()
@@ -38,7 +39,23 @@ class EstateProperty(models.Model):
     offer_ids = fields.One2many('estate.property.offer', 'property_id', string='Offers')
     best_price = fields.Float(compute='_compute_best_price',string='Mejor Precio', store=True)
     total_area = fields.Float(compute='_compute_total_area',string= 'Total Area', store=True)
-    
+    _sql_constraints = [
+        ('expected_price_positive', 'CHECK(expected_price > 0)', 'The expected price must be positive.'),
+        ('selling_price_non_negative', 'CHECK(selling_price > 0)', 'The selling price must be positive.'),
+        ('property_name_unique', 'UNIQUE(name)', 'The property name must be unique.'),
+    ]
+    def action_cancel(self):
+        for record in self:
+            if record.state == "sold":
+                raise UserError('Una propiedad vendida no puede cancelarse')
+            record.state = 'canceled'
+
+    def action_sold(self):
+        for record in self:
+            if record.state == "canceled":
+                raise UserError('Una propiedad cancelada no puede venderse')
+            record.state = 'sold'
+
     @api.depends('living_area', 'garden_area')
     def _compute_total_area(self):
         for record in self:
@@ -59,17 +76,34 @@ class EstateProperty(models.Model):
 class EstatePropertyTag(models.Model):
     _name = 'estate.property.tag'
     _description = 'Tag'
+    _order= 'name asc'
+    color= fields.Selection([
+        ('0', 'Red'),
+        ('1', 'Blue'),
+        ('2', 'Green'),
+    ], string="Color", default='0')
     name = fields.Char(required=True)
+_sql_constraints = [
+    ('tag_name_unique', 'UNIQUE(name)', 'The property tag name must be unique')
+]
 
 class EstatePropertyType(models.Model):
     _name = 'estate.property.type'
     _description = 'Type'
+    _order= 'sequence, name asc'
+
+    sequence=fields.Integer('Sequence',default=1)
     name = fields.Char(required=True)
-    estate_property_ids = fields.One2many('estate.property', 'type_id', string='Properties')
+    estate_property_id = fields.One2many('estate.property', 'type_id', string='Properties')
+_sql_constraints = [
+    ('type_name_unique', 'UNIQUE(name)','The property type name must be unique')
+]
 
 class Offer(models.Model):
     _name = 'estate.property.offer'
     _description = 'Offer'
+    _order = 'price desc'
+
     price = fields.Float()
     status = fields.Selection([
         ('accepted', 'Accepted'),
@@ -79,6 +113,32 @@ class Offer(models.Model):
     property_id = fields.Many2one('estate.property', required=True)
     validity= fields.Integer(string='Validity (days)', default=7)
     date_deadline= fields.Date(string='Deadline', inverse='_compute_deadline', store=True)
+    _sql_constraints = [
+        ('offer_price_positive', 'CHECK(price > 0)', 'The offer price must be positive')
+    ]
+    def action_refuse(self):
+        for record in self:
+            if record.property_id.state =='sold':
+                raise UserError('No se puede cancelar una oferta ya aceptada')
+            else:
+                record.status = 'refused'
+                record.property_id.state= 'canceled'
+            return True
+    
+    def action_accepted(self):
+        for record in self:
+            if record.property_id.state == 'sold':
+                raise UserError('No se puede aceptar una oferta de una casa ya vendida!')
+            elif(record.price>= record.property_id.expected_price * 0.9):
+                record.status = 'accepted'
+                record.property_id.state = 'sold'
+                record.property_id.buyer_id = record.partner_id.id
+                record.property_id.selling_price = record.price
+                record.property_id.state = 'sold'
+            else:
+                raise ValidationError('El precio tiene que ser de el 90%')
+
+
     @api.depends('create_date', 'validity')
     def _compute_deadline(self):
         for record in self:
@@ -92,3 +152,5 @@ class Offer(models.Model):
             record.validity = (record.date_deadline - record.create_date).days 
         else:
             record.validity= 0
+
+    

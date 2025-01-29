@@ -24,7 +24,7 @@
                 <field name="garden_area" string= 'Garden Area'/>
                 <field name="garden_orientation" string= 'Garden Orientation'/>
                 <field name="active" string= 'Active'/>
-                <field name="state" string= 'State'/>
+                <field name="state" string= 'State' widget='statusbar' options="{'clickable' :'true'}"/>
             </tree>
         </field>
     </record>
@@ -33,6 +33,12 @@
         <field name="model">estate.property</field>
         <field name="arch" type="xml">
             <form string="Estate Property">
+                <header>
+                
+                <button name="action_cancel" type="object" string= "Cancel" invisible="state == 'sold' or state == 'canceled'"/>
+                <button name="action_sold" type="object" string= "Sold" invisible="state == 'sold' or state == 'canceled'"/>
+
+                </header>
                 <sheet>
                 
                     <notebook>
@@ -68,19 +74,19 @@
                       
                         <group name="name" string="Informacion del Patio">
                             <field name="garden" string='Patio'/>
-                            <field name="garden_area" string='Area del patio'/>
-                            <field name="garden_orientation" string='Orientacion del Patio'/>
+                            <field name="garden_area" string='Area del patio' invisible="not garden"/>
+                            <field name="garden_orientation" string='Orientacion del Patio' invisible = "not garden"/>
                             <field name="total_area" string= 'Area total'/>
                         </group>
 
                         <group name="name" string="Property Availability">
                             <field name="date_availability" string= 'Date Availability'/>
                             <field name="active" string='Active'/>
-                            <field name="state" string='State'/>
+                            <field name="state" string='State' widget="statusbar" options="{'clickable': 'true'}"/>
                         </group>
                         <group name="Tags/Type" string="Tags/Type">
-                            <field name="tag_ids" widget='many2many_tags'/>
-                            <field name="type_id" widget="many2one"/>     
+                            <field name="tag_ids" widget='many2many_tags' options="{'colors': {'0': 'red', '1': 'blue', '2': 'green'}}"/>
+                            <field name="type_id" widget="many2one"/>                        
                         </group>
                     </group>
                 </sheet>
@@ -137,6 +143,40 @@
                 <field name="property_id"/>
                 <field name="validity" />
                 <field name="date_deadline" />
+                <button name="action_accepted" type="object" string="Accept" icon='fa-check' invisible="state == 'offer received' or state == 'sold or state== 'canceled'"/>
+                <button name="action_refuse" type="object" string="Refuse" icon='fa-times' invisible="state == 'offer received' or state == 'sold or state== 'canceled'"/>
+            </tree>
+        </field>
+    </record>
+    <record id="view_estate_property_type_form" model="ir.ui.view">
+    <field name="name">estate.property.type.form</field>
+    <field name="model">estate.property.type</field>
+    <field name="arch" type="xml">
+        <form string="Property Type">
+            <sheet>
+                <group>
+                    <field name="name"/>
+                </group>
+                <group>
+                    <field name="estate_property_id">
+                        <tree editable="bottom">
+                            <field name="name"/>
+                            <field name="expected_price"/>
+                            <field name="state"/>
+                        </tree>
+                    </field>
+                </group>
+            </sheet>
+        </form>
+    </field>
+</record>
+    <record id="estate_property_type_view_tree" model="ir.ui.view">
+        <field name="name">estate.property.type.view.tree</field>
+        <field name="model">estate.property.type</field>
+        <field name="arch" type="xml">
+            <tree string="Property Type">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
             </tree>
         </field>
     </record>
