@@ -1,6 +1,6 @@
 from odoo import fields, models, api
 from datetime import datetime, timedelta
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 
 class TestModel(models.Model):
     _name = "test_model"
@@ -28,6 +28,11 @@ class TestModel(models.Model):
     offer_ids = fields.Many2many('estate_property_offer', string='ofertas')
     total_area = fields.Integer(compute="_compute_total", string="area total")
     best_price = fields.Float(compute="_compute_best_price", string="mejor precio")
+    _sql_constraints = [
+        ('expected_price_positive', 'CHECK(expected_price > 0)', 'El precio debe ser estrictamente mayor que cero'),
+        ('selling_price_positive', 'CHECK(selling_price >= 0)', 'El precio de venta debe ser mayor o igual a cero'),
+        ('name_unique', 'UNIQUE(name)', 'Ya existe una propiedad con el mismo nombre')
+    ]
         
     @api.depends('living_area', 'garden_area')
     def _compute_total(self):
@@ -37,7 +42,7 @@ class TestModel(models.Model):
     @api.depends('offer_ids')
     def _compute_best_price(self):
         for record in self:
-            record.best_price = max(record.offer_ids.mapped('price'))
+            record.best_price = max(record.offer_ids.mapped('price')) if record.offer_ids else 0.0
 
     @api.onchange('garden')
     def _onchange_garden(self):
@@ -67,12 +72,13 @@ class TestModel(models.Model):
             else:
                 record.state = "cancelado"
         return True
-    
+
 class tipo(models.Model):
     _name = "estate_property_type"
     _description = "Los tipos de propiedades (casa, apartamento, ático, castillo)"
 
     name = fields.Char(required=True)
+    property_ids = fields.One2many('test_model', 'type_id', string='property')
 
 class tag(models.Model):
     _name = "estate_property_tag"
@@ -85,11 +91,12 @@ class oferta(models.Model):
     _description = "Ofertas y esas cosas"
 
     price = fields.Float()
-    status = fields.Selection([('aceptado','Aceptado'),('rechazado','Rechazado')], copy=False)
+    status = fields.Selection([('aceptado','Aceptado'),('rechazado','Rechazado')], copy=False, readonly=True)
     validity = fields.Integer(inverse="_inverse_validity", string="validez de la oferta")
     date_deadline = fields.Date(string="fecha limite de la oferta")
     partner_id = fields.Many2one('res.partner', string='Cliente', required=True)
     property_id = fields.Many2one('test_model', string='Propiedad', required=True)
+    _sql_constraints = [('price_positive','CHECK(price > 0)','El precio debe ser estrictamente mayor que cero')]
 
     @api.depends('validity')
     def _inverse_validity(self):
@@ -104,11 +111,18 @@ class oferta(models.Model):
                 record.status = 'aceptado'
                 record.property_id.state = 'vendido'
                 record.property_id.selling_price = record.price
-                record.property_id.vendedor_id = record.partner_id.id
+                #record.property_id.vendedor_id = record.partner_id.id
+                record._check_price()
             return True
 
     def action_rechazar(self):
         for record in self:
             record.status = 'rechazado'
             record.property_id.state = 'cancelado'
-            record.property_id.selling_price = 0
+            #record.property_id.selling_price = 0
+
+    @api.constrains('price', 'property_id.expected_price', 'property_id.selling_price')
+    def _check_price(self):
+        for record in self:
+            if record.price < 0.9 * record.property_id.expected_price:
+                raise ValidationError("La propiedad no se puede vender a un valor menor que el 90%")

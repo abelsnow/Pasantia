@@ -77,7 +77,7 @@
                                 </group>
                             </group>
                         </page>
-                        <page string="Otros">
+                        <page string="Ofertas">
                             <group name="info" string="Información de Venta">
                                 <field name="vendedor_id" string="Vendedor" />
                                 <field name="comprador_id" string="Comprador" />
@@ -133,6 +133,29 @@
                 <field name="partner_id" string="SocioID" />
                 <field name="property_id" string="PropiedadID" />
             </tree>
+        </field>
+    </record>
+
+    <record id="estate_property_type_view_form" model="ir.ui.view">
+        <field name="name">estate_property_type.view.form</field>
+        <field name="model">estate_property_type</field>
+        <field name="arch" type="xml">
+            <form string="">
+                <sheet>
+                    <group>
+                        <field name="name" />
+                    </group>
+                    <group>
+                        <field name="property_ids">
+                            <tree editable="buttom">
+                                <field name="name" />
+                                <field name="expected_price" />
+                                <field name="state" />
+                            </tree>
+                        </field>
+                    </group>
+                </sheet>
+            </form>
         </field>
     </record>
 
