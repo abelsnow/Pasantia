@@ -1,5 +1,6 @@
 from odoo import fields, models, api
 from datetime import datetime, timedelta
+from odoo.exceptions import UserError
 
 class TestModel(models.Model):
     _name = "test_model"
@@ -22,7 +23,7 @@ class TestModel(models.Model):
     state = fields.Selection([('nuevo','Nuevo'),('oferta_recibida','Oferta recibida'),('oferta_aceptada','Oferta aceptada'),('vendido','Vendido'),('cancelado','Cancelado')], default = 'nuevo', required = True)
     tag_ids = fields.Many2many('estate_property_tag', string='tags')
     type_id = fields.Many2one('estate_property_type', string='types')
-    vendedor_id = fields.Many2one('res.users', string='vendedor', default = lambda self: self.env.user)
+    vendedor_id = fields.Many2one('res.partner', string='vendedor', default = lambda self: self.env.user)
     comprador_id = fields.Many2one('res.users', string='comprador')
     offer_ids = fields.Many2many('estate_property_offer', string='ofertas')
     total_area = fields.Integer(compute="_compute_total", string="area total")
@@ -47,6 +48,26 @@ class TestModel(models.Model):
             self.garden_orientation = False
             self.garden_area = 0
 
+    def vender(self):
+        for record in self:
+            if record.state == "cancelado":
+                raise UserError("No se puede vender, se encuentra en estado cancelado")
+            if record.state == "vendido":
+                raise UserError("La propiedad ya se encuentra vendida")
+            else:
+                record.state = "vendido"
+        return True
+    
+    def cancelar(self):
+        for record in self:
+            if record.state == "vendido":
+                raise UserError("No se puede cancelar, se encuentra en estado vendido")
+            if record.state == "cancelado":
+                raise UserError("La propiedad ya se encuentra cancelada")
+            else:
+                record.state = "cancelado"
+        return True
+    
 class tipo(models.Model):
     _name = "estate_property_type"
     _description = "Los tipos de propiedades (casa, apartamento, ático, castillo)"
@@ -64,7 +85,7 @@ class oferta(models.Model):
     _description = "Ofertas y esas cosas"
 
     price = fields.Float()
-    status = fields.Selection([('disponible','indispuesto')], copy=False)
+    status = fields.Selection([('aceptado','Aceptado'),('rechazado','Rechazado')], copy=False)
     validity = fields.Integer(inverse="_inverse_validity", string="validez de la oferta")
     date_deadline = fields.Date(string="fecha limite de la oferta")
     partner_id = fields.Many2one('res.partner', string='Cliente', required=True)
@@ -74,3 +95,20 @@ class oferta(models.Model):
     def _inverse_validity(self):
         for record in self:
             record.date_deadline = record.date_deadline.today() + timedelta(days=record.validity)
+
+    def action_aceptar(self):
+        for record in self:
+            if record.property_id.state == 'vendido':
+                raise UserError("Ya se encuentra vendido")
+            else:
+                record.status = 'aceptado'
+                record.property_id.state = 'vendido'
+                record.property_id.selling_price = record.price
+                record.property_id.vendedor_id = record.partner_id.id
+            return True
+
+    def action_rechazar(self):
+        for record in self:
+            record.status = 'rechazado'
+            record.property_id.state = 'cancelado'
+            record.property_id.selling_price = 0
