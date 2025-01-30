@@ -80,12 +80,13 @@ class EstatePropertyTag(models.Model):
     _name = 'estate.property.tag'
     _description = 'Tag'
     _order= 'name asc'
+
+    name = fields.Char(required=True)
     color= fields.Selection([
         ('0', 'Red'),
         ('1', 'Blue'),
         ('2', 'Green'),
     ], string="Color", default='0')
-    name = fields.Char(required=True)
     _sql_constraints = [
     ('tag_name_unique', 'UNIQUE(name)', 'The property tag name must be unique')
 ]
@@ -96,7 +97,7 @@ class EstatePropertyType(models.Model):
     _order= 'sequence, name asc'
 
     offer_ids=fields.One2many('estate.property.offer', 'property_type_id', string= 'Offers')
-
+    offer_count=fields.Integer(string='Offer count', compute='_compute_offer_count')
     sequence=fields.Integer('Sequence',default=1)
     name = fields.Char(required=True)
     estate_property_id = fields.One2many('estate.property', 'type_id', string='Properties')
@@ -112,7 +113,11 @@ class EstatePropertyType(models.Model):
             'domain': [('property_type_id', '=', self.id)],
             'context': {'default_property_type_id': self.id},
         }
-
+    @api.depends('offer_ids')
+    def _compute_offer_count(self):
+        for record in self:
+            record.offer_count = len(record.offer_ids)
+            
 class Offer(models.Model):
     _name = 'estate.property.offer'
     _description = 'Offer'
