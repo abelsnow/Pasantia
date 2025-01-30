@@ -23,4 +23,5 @@
     'application': True,
     'assets': {},
     'license': '',
+
 }

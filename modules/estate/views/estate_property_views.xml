@@ -37,8 +37,10 @@
         <field name="arch" type="xml">
             <form string="Test">
                 <header>
-                    <button name="cancelar" type="object" string="Cancelar" />
-                    <button name="vender" type="object" string="Vender" />
+                    <button name="cancelar" type="object" string="Cancelar"
+                        invisible="state == 'oferta_recibida' or state == 'vendido' or state== 'cancelado'" />
+                    <button name="vender" type="object" string="Vender"
+                        invisible="state == 'oferta_recibida' or state == 'vendido' or state== 'cancelado'" />
                 </header>
                 <sheet>
                     <group>
@@ -72,8 +74,10 @@
                                     <field name="facades" />
                                 </group>
                                 <group string="Tipo de propiedad">
-                                    <field name="tag_ids" widget="many2many" />
-                                    <field name="type_id" widget="Many2one" />
+                                    <field name="tag_ids" widget="many2many_tags"
+                                        options="{'color_field': 'color', 'no_edit_color': true}" />
+                                    <field name="type_id" widget="Many2one"
+                                        options="{'no_create_edit': true, 'no_create': true}" />
                                 </group>
                             </group>
                         </page>
@@ -150,12 +154,23 @@
                             <tree editable="buttom">
                                 <field name="name" />
                                 <field name="expected_price" />
-                                <field name="state" />
+                                <field name="state" widget='statusbar' />
                             </tree>
                         </field>
                     </group>
                 </sheet>
             </form>
+        </field>
+    </record>
+
+    <record id="estate_property_type_view_tree" model="ir.ui.view">
+        <field name="name">estate_property_type.view.tree</field>
+        <field name="model">estate_property_type</field>
+        <field name="arch" type="xml">
+            <tree string="">
+                <field name="sequence" widget="handle" />
+                <field name="name" />
+            </tree>
         </field>
     </record>
 

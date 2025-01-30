@@ -2,9 +2,13 @@ from odoo import fields, models, api
 from datetime import datetime, timedelta
 from odoo.exceptions import UserError, ValidationError
 
+# -----------------------------------------------------------------------------------------------------------
+# Clase TestModel (estate_property)
+# -----------------------------------------------------------------------------------------------------------
 class TestModel(models.Model):
     _name = "test_model"
     _description = "Test Model"
+    _order = "id desc"
 
     name = fields.Char(required = True)
     description = fields.Text()
@@ -73,22 +77,36 @@ class TestModel(models.Model):
                 record.state = "cancelado"
         return True
 
+# -----------------------------------------------------------------------------------------------------------
+# Clase tipo (estate_property_type)
+# -----------------------------------------------------------------------------------------------------------
 class tipo(models.Model):
     _name = "estate_property_type"
     _description = "Los tipos de propiedades (casa, apartamento, ático, castillo)"
+    _order = "name"
 
     name = fields.Char(required=True)
     property_ids = fields.One2many('test_model', 'type_id', string='property')
+    sequence = fields.Integer('sequence')
 
+# -----------------------------------------------------------------------------------------------------------
+# Clase tag (estate_property_tag)
+# -----------------------------------------------------------------------------------------------------------
 class tag(models.Model):
     _name = "estate_property_tag"
     _description = "La etiqueta"
+    _order = "name"
 
     name = fields.Char(required=True)
+    color = fields.Integer()
 
+# -----------------------------------------------------------------------------------------------------------
+# Clase oferta (estate_property_offer)
+# -----------------------------------------------------------------------------------------------------------
 class oferta(models.Model):
     _name = "estate_property_offer"
     _description = "Ofertas y esas cosas"
+    _order = "price desc"
 
     price = fields.Float()
     status = fields.Selection([('aceptado','Aceptado'),('rechazado','Rechazado')], copy=False, readonly=True)
