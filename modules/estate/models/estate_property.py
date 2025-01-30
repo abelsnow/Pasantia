@@ -98,7 +98,7 @@ class tag(models.Model):
     _order = "name"
 
     name = fields.Char(required=True)
-    color = fields.Integer()
+    color = fields.Selection([('0','Blanco'),('1','Azul'),('2','Celeste')])
 
 # -----------------------------------------------------------------------------------------------------------
 # Clase oferta (estate_property_offer)
