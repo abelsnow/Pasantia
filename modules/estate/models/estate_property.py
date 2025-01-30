@@ -20,13 +20,18 @@ class EstateProperty(models.Model):
     garage = fields.Boolean()
     garden = fields.Boolean(default=False)
     garden_area = fields.Integer()
+    active = fields.Boolean(default=True)
+    tag_ids = fields.Many2many('estate.property.tag', string='Tags')
+    type_id = fields.Many2one('estate.property.type', string='Property Type')
+    offer_ids = fields.One2many('estate.property.offer', 'property_id', string='Offers', readonly=1, invisible= "[(state, 'in', ['offer_accepted', 'sold', 'canceled'])]")
+    best_price = fields.Float(compute='_compute_best_price',string='Mejor Precio', store=True)
+    total_area = fields.Float(compute='_compute_total_area',string= 'Total Area', store=True)
     garden_orientation = fields.Selection([
         ('north', 'North'),
         ('south', 'South'),
         ('east', 'East'),
         ('west', 'West'),
     ])
-    active = fields.Boolean(default=True)
     state = fields.Selection([
         ('new', 'New'),
         ('offer received', 'Offer received'),
@@ -34,16 +39,14 @@ class EstateProperty(models.Model):
         ('sold', 'Sold'),
         ('canceled', 'Canceled'),
     ], default='new', copy=False, required=True)
-    tag_ids = fields.Many2many('estate.property.tag', string='Tags')
-    type_id = fields.Many2one('estate.property.type', string='Property Type')
-    offer_ids = fields.One2many('estate.property.offer', 'property_id', string='Offers', readonly=1, invisible= "[(state, 'in', ['offer_accepted', 'sold', 'canceled'])]")
-    best_price = fields.Float(compute='_compute_best_price',string='Mejor Precio', store=True)
-    total_area = fields.Float(compute='_compute_total_area',string= 'Total Area', store=True)
+    
+    
     _sql_constraints = [
         ('expected_price_positive', 'CHECK(expected_price > 0)', 'The expected price must be positive.'),
         ('selling_price_non_negative', 'CHECK(selling_price > 0)', 'The selling price must be positive.'),
         ('property_name_unique', 'UNIQUE(name)', 'The property name must be unique.'),
     ]
+
     def action_cancel(self):
         for record in self:
             if record.state == "sold":
@@ -83,7 +86,7 @@ class EstatePropertyTag(models.Model):
         ('2', 'Green'),
     ], string="Color", default='0')
     name = fields.Char(required=True)
-_sql_constraints = [
+    _sql_constraints = [
     ('tag_name_unique', 'UNIQUE(name)', 'The property tag name must be unique')
 ]
 
@@ -92,27 +95,38 @@ class EstatePropertyType(models.Model):
     _description = 'Type'
     _order= 'sequence, name asc'
 
+    offer_ids=fields.One2many('estate.property.offer', 'property_type_id', string= 'Offers')
+
     sequence=fields.Integer('Sequence',default=1)
     name = fields.Char(required=True)
     estate_property_id = fields.One2many('estate.property', 'type_id', string='Properties')
-_sql_constraints = [
+    _sql_constraints     = [
     ('type_name_unique', 'UNIQUE(name)','The property type name must be unique')
 ]
+    def action_view_offers(self):
+        return{
+            'name': 'Offers',
+            'type': 'ir.actions.act_window',
+            'res_model': 'estate.property.offer',
+            'view_mode': 'tree,form',
+            'domain': [('property_type_id', '=', self.id)],
+            'context': {'default_property_type_id': self.id},
+        }
 
 class Offer(models.Model):
     _name = 'estate.property.offer'
     _description = 'Offer'
     _order = 'price desc'
-
     price = fields.Float()
-    status = fields.Selection([
-        ('accepted', 'Accepted'),
-        ('refused', 'Refused'),
-    ], copy=False)
     partner_id = fields.Many2one('res.partner', string='Partner', required=True)
     property_id = fields.Many2one('estate.property', required=True)
     validity= fields.Integer(string='Validity (days)', default=7)
     date_deadline= fields.Date(string='Deadline', inverse='_compute_deadline', store=True)
+    property_type_id=fields.Many2one('estate.property.type', string = 'Ofertas de Tipo', related='property_id.type_id',store=True)
+    status = fields.Selection([
+        ('accepted', 'Accepted'),
+        ('refused', 'Refused'),
+    ], copy=False)
     _sql_constraints = [
         ('offer_price_positive', 'CHECK(price > 0)', 'The offer price must be positive')
     ]
