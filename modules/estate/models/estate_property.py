@@ -36,7 +36,7 @@ class EstateProperty(models.Model):
     ], default='new', copy=False, required=True)
     tag_ids = fields.Many2many('estate.property.tag', string='Tags')
     type_id = fields.Many2one('estate.property.type', string='Property Type')
-    offer_ids = fields.One2many('estate.property.offer', 'property_id', string='Offers')
+    offer_ids = fields.One2many('estate.property.offer', 'property_id', string='Offers', readonly=1, invisible= "[(state, 'in', ['offer_accepted', 'sold', 'canceled'])]")
     best_price = fields.Float(compute='_compute_best_price',string='Mejor Precio', store=True)
     total_area = fields.Float(compute='_compute_total_area',string= 'Total Area', store=True)
     _sql_constraints = [
