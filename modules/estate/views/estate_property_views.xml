@@ -9,11 +9,13 @@
     <field name="name">estate_property_tree</field>
     <field name="model">estate.property</field>
     <field name="arch" type="xml">
-            <tree string="Estate Properties">
+            <tree string="Estate Properties" decoration-success= "state == 'offer_accepted' or state == 'offer_received'" 
+            decoration-bf= "state == 'offer_accepted'"
+            decoration-muted= "state == 'sold'"> 
                 <field name="name" string= 'Property Name'/>
                 <field name="description" string= 'Description'/>
                 <field name="postcode" string= 'Postcode'/>
-                <field name="date_availability" string= 'Date Availability'/>
+                <field name="date_availability" string= 'Date Availability' optional= "hide"/>
                 <field name="expected_price" string= 'Expected Price'/>
                 <field name="selling_price" string= 'Selling Price'/>
                 <field name="bedrooms" string= 'Bedrooms'/>
@@ -80,12 +82,12 @@
                         </group>
 
                         <group name="name" string="Property Availability">
-                            <field name="date_availability" string= 'Date Availability'/>
+                            <field name="date_availability" string= 'Date Availability' optional= "hide"/>
                             <field name="active" string='Active'/>
                             <field name="state" string='State' widget="statusbar" options="{'clickable': 'true'}"/>
                         </group>
                         <group name="Tags/Type" string="Tags/Type">
-                            <field name="tag_ids" widget='many2many_tags' options="{'colors': {'0': 'red', '1': 'blue', '2': 'green'}}"/>
+                            <field name="tag_ids" widget='many2many_tags' options="{'colors': {'0': 'red', '1': 'blue', '2': 'green'}}" />
                             <field name="type_id" widget="many2one"/>                        
                         </group>
                     </group>
@@ -136,7 +138,7 @@
         <field name="name">estate.property.offer.view.tree</field>
         <field name="model">estate.property.offer</field>
         <field name="arch" type="xml">
-            <tree string="Offers">
+            <tree string="Offers" editable="bottom">
                 <field name="price"/>
                 <field name="status"/>
                 <field name="partner_id"/>
@@ -177,6 +179,16 @@
             <tree string="Property Type">
                 <field name="sequence" widget="handle"/>
                 <field name="name"/>
+            </tree>
+        </field>
+    </record>
+    <record id="estate_property_tag_view_tree" model="ir.ui.view">
+        <field name="name">estate.property.tag.view.tree</field>
+        <field name="model">estate.property.tag</field>
+        <field name="arch" type="xml">
+            <tree string="Property Tags" editable='bottom'>
+                <field name="name" />
+                <field name="color"/>
             </tree>
         </field>
     </record>
