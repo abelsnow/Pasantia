@@ -40,7 +40,17 @@ class EstateProperty(models.Model):
         ('canceled', 'Canceled'),
     ], default='new', copy=False, required=True)
     
-    
+    @api.ondelete(at_uninstall=False)
+    def _error_when_user_delete_property(self):
+        for record in self:
+            if record.state not in[
+                'new',
+                'canceled']:
+                raise UserError('No se puede eliminar una propiedad en ese estado')
+        
+        
+
+
     _sql_constraints = [
         ('expected_price_positive', 'CHECK(expected_price > 0)', 'The expected price must be positive.'),
         ('selling_price_non_negative', 'CHECK(selling_price > 0)', 'The selling price must be positive.'),
@@ -62,11 +72,13 @@ class EstateProperty(models.Model):
     @api.depends('living_area', 'garden_area')
     def _compute_total_area(self):
         for record in self:
-            record.total_area = record.living_area + record.garden_area 
+            record.total_area = record.living_area + record.garden_area
+
     @api.depends('offer_ids.price')
     def _compute_best_price(self):
         for record in self:
             record.best_price = min(record.offer_ids.mapped('price')) if record.offer_ids else 0.0
+
     @api.onchange('garden')
     def _onchange_garden(self):
         if self.garden:
@@ -75,6 +87,8 @@ class EstateProperty(models.Model):
         else:
             self.garden_orientation = False
             self.garden_area = 0
+
+
 
 class EstatePropertyTag(models.Model):
     _name = 'estate.property.tag'
@@ -127,11 +141,13 @@ class Offer(models.Model):
     property_id = fields.Many2one('estate.property', required=True)
     validity= fields.Integer(string='Validity (days)', default=7)
     date_deadline= fields.Date(string='Deadline', inverse='_compute_deadline', store=True)
-    property_type_id=fields.Many2one('estate.property.type', string = 'Ofertas de Tipo', related='property_id.type_id',store=True)
+    property_type_id=fields.Many2one('estate.property.type', string = 'Ofertas de Tipo', related='property_id.type_id', store=True)
+    active_id= fields.Many2one('estate.property')
     status = fields.Selection([
         ('accepted', 'Accepted'),
         ('refused', 'Refused'),
     ], copy=False)
+
     _sql_constraints = [
         ('offer_price_positive', 'CHECK(price > 0)', 'The offer price must be positive')
     ]
@@ -172,4 +188,13 @@ class Offer(models.Model):
         else:
             record.validity= 0
 
+    @api.model
+    def create (self, vals):
+        property_id = self.env['estate.property'].browse(vals['property_id'])
+        if property_id.offer_ids and vals['price'] < max(property_id.offer_ids.mapped('price')):
+            raise UserError("No se puede crear una oferta menor a las ya existentes!")
+        offer =super(Offer,self).create(vals)
+        property_id.state = 'offer received'
+        
+        return offer
     

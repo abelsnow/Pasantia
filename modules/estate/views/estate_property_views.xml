@@ -40,7 +40,7 @@
                 
                 <button name="action_cancel" type="object" string= "Cancel" invisible="state == 'sold' or state == 'canceled'"/>
                 <button name="action_sold" type="object" string= "Sold" invisible="state == 'sold' or state == 'canceled'"/>
-
+                <field name="state" string='State' widget="statusbar" options="{'clickable': 'true'}"/>
                 </header>
                 <sheet>
                 
@@ -85,7 +85,6 @@
                         <group name="name" string="Property Availability">
                             <field name="date_availability" string= 'Date Availability' optional= "hide"/>
                             <field name="active" string='Active'/>
-                            <field name="state" string='State' widget="statusbar" options="{'clickable': 'true'}"/>
                         </group>
                         <group name="Tags/Type" string="Tags/Type">
                             <field name="tag_ids" widget='many2many_tags' options="{'colors': {'0': 'red', '1': 'blue', '2': 'green'}}" />
@@ -109,12 +108,12 @@
         </field>
     </record>
 <record id="tag_ids_action" model="ir.actions.act_window">
-    <field name="name">Estate Properties</field>
+    <field name="name">Tags</field>
     <field name="res_model">estate.property.tag</field>
     <field name="view_mode">tree,form</field>
 </record>
 <record id="type_id_action" model="ir.actions.act_window">
-    <field name="name">Estate Properties</field>
+    <field name="name">Types</field>
     <field name="res_model">estate.property.type</field>
     <field name="view_mode">tree,form</field>
 </record>
@@ -153,6 +152,17 @@
             </tree>
         </field>
     </record>
+
+
+    <record id="estate_property_offer_action" model="ir.actions.act_window">
+        <field name="name"></field>
+        <field name="res_model">estate.property.offer</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('estate_property_type_id', '=', 'active_id.active')]</field>
+        <field name="context">{'default_property_type_id': active_id.active}</field>
+
+    </record>
+
     <record id="view_estate_property_type_view_form" model="ir.ui.view">
     <field name="name">estate.property.type.view.form</field>
     <field name="model">estate.property.type</field>
@@ -178,7 +188,7 @@
                 </button>
             </div>
             <notebook>
-                <page name="Properties" string="string">
+                <page name="name" string="Types">
                     <field name="estate_property_id" />
                 </page>
                 <page string= "Offers">
@@ -201,7 +211,7 @@
         </field>
     </record>
     <record id="estate_property_type_action" model="ir.actions.act_window">
-        <field name="name">Action Name</field>
+        <field name="name">Estate Property Type action</field>
         <field name="res_model">estate.property.type</field>
         <field name="view_mode">tree,form</field>
 
@@ -216,4 +226,5 @@
             </tree>
         </field>
     </record>
+
 </odoo>
