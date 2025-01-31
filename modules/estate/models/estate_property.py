@@ -1,4 +1,4 @@
-from odoo import fields, models, api
+from odoo import fields, models, api, exceptions
 from datetime import datetime, timedelta
 from odoo.exceptions import UserError, ValidationError
 
@@ -89,6 +89,15 @@ class tipo(models.Model):
     property_ids = fields.One2many('test_model', 'type_id', string='property')
     sequence = fields.Integer('sequence')
 
+    def open_type_offer_related_action(self):
+        return {
+            "type": "ir.actions.act_window",
+            "name": "type_offer_related_action",
+            "res_model": "estate_property_offer",
+            "view_mode": "tree,form",
+            "domain": [("property_id.type_id", "=", self.id)]
+        }
+
 # -----------------------------------------------------------------------------------------------------------
 # Clase tag (estate_property_tag)
 # -----------------------------------------------------------------------------------------------------------
@@ -114,6 +123,8 @@ class oferta(models.Model):
     date_deadline = fields.Date(string="fecha limite de la oferta")
     partner_id = fields.Many2one('res.partner', string='Cliente', required=True)
     property_id = fields.Many2one('test_model', string='Propiedad', required=True)
+    property_type_id = fields.Many2one('estate_property_type', string='Ofertas del tipo')
+    offer_type = fields.Char(related='property_type_id.name')
     _sql_constraints = [('price_positive','CHECK(price > 0)','El precio debe ser estrictamente mayor que cero')]
 
     @api.depends('validity')
@@ -144,3 +155,6 @@ class oferta(models.Model):
         for record in self:
             if record.price < 0.9 * record.property_id.expected_price:
                 raise ValidationError("La propiedad no se puede vender a un valor menor que el 90%")
+            
+
+            

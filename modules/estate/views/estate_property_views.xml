@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+
+    <!-- ********************************************************************************** -->
+    <!-- Action test_model -->
+    <!-- ********************************************************************************** -->
     <record id="test_model_action" model="ir.actions.act_window">
         <field name="name">Test action</field>
         <field name="res_model">test_model</field>
@@ -7,34 +11,27 @@
         <field name="context">{'search_default_disponible': 1}</field>
     </record>
 
-    <record id="estate_property_list_view" model="ir.ui.view">
-        <field name="name">test_model_tree</field>
-        <field name="model">test_model</field>
-        <field name="arch" type="xml">
-            <tree string="Estate Properties"
-                decoration-success="state == 'oferta_recibida' or state == 'oferta_aceptada'"
-                decoration-bf="state == 'oferta_aceptada'"
-                decoration-muted="state == 'vendido'">
-                <field name="name" string='Property Name' />
-                <field name="description" string='Description' />
-                <field name="postcode" string='Postcode' />
-                <field name="date_availability" string='Date Availability' optional="hide" />
-                <field name="expected_price" string='Expected Price' />
-                <field name="selling_price" string='Selling Price' />
-                <field name="bedrooms" string='Bedrooms' />
-                <field name="living_area" string='Living Area' />
-                <field name="facades" string='Facades' />
-                <field name="garage" string='Garage' />
-                <field name="garden" string='Garden' />
-                <field name="garden_area" string='Garden_Area' />
-                <field name="garden_orientation" string='Garden Orientation' />
-                <field name="active" string='Active' />
-                <field name="state" string='State' />
-            </tree>
-        </field>
+    <!-- ********************************************************************************** -->
+    <!-- Action types_properties -->
+    <!-- ********************************************************************************** -->
+    <record id="types_properties_action" model="ir.actions.act_window">
+        <field name="name">Types action</field>
+        <field name="res_model">estate_property_type</field>
+        <field name="view_mode">tree,form</field>
     </record>
 
+    <!-- ********************************************************************************** -->
+    <!-- Action tags_properties -->
+    <!-- ********************************************************************************** -->
+    <record id="tags_properties_action" model="ir.actions.act_window">
+        <field name="name">Tags action</field>
+        <field name="res_model">estate_property_tag</field>
+        <field name="view_mode">tree,form</field>
+    </record>
 
+    <!-- ********************************************************************************** -->
+    <!-- View test_model -->
+    <!-- ********************************************************************************** -->
     <record id="test_model_view_form" model="ir.ui.view">
         <field name="name">test_model.form</field>
         <field name="model">test_model</field>
@@ -101,6 +98,41 @@
         </field>
     </record>
 
+
+    <!-- ********************************************************************************** -->
+    <!-- View estate_property -->
+    <!-- ********************************************************************************** -->
+    <record id="estate_property_list_view" model="ir.ui.view">
+        <field name="name">test_model_tree</field>
+        <field name="model">test_model</field>
+        <field name="arch" type="xml">
+            <tree string="Estate Properties"
+                decoration-success="state == 'oferta_recibida' or state == 'oferta_aceptada'"
+                decoration-bf="state == 'oferta_aceptada'"
+                decoration-muted="state == 'vendido'">
+                <field name="name" string='Property Name' />
+                <field name="description" string='Description' />
+                <field name="postcode" string='Postcode' />
+                <field name="date_availability" string='Date Availability' optional="hide" />
+                <field name="expected_price" string='Expected Price' />
+                <field name="selling_price" string='Selling Price' />
+                <field name="bedrooms" string='Bedrooms' />
+                <field name="living_area" string='Living Area' />
+                <field name="facades" string='Facades' />
+                <field name="garage" string='Garage' />
+                <field name="garden" string='Garden' />
+                <field name="garden_area" string='Garden_Area' />
+                <field name="garden_orientation" string='Garden Orientation' />
+                <field name="active" string='Active' />
+                <field name="state" string='State' />
+            </tree>
+        </field>
+    </record>
+
+
+    <!-- ********************************************************************************** -->
+    <!-- View Search test_model -->
+    <!-- ********************************************************************************** -->
     <record id="test_model_view_search" model="ir.ui.view">
         <field name="name">test_model.search</field>
         <field name="model">test_model</field>
@@ -117,18 +149,9 @@
         </field>
     </record>
 
-    <record id="types_properties_action" model="ir.actions.act_window">
-        <field name="name">Types action</field>
-        <field name="res_model">estate_property_type</field>
-        <field name="view_mode">tree,form</field>
-    </record>
-
-    <record id="tags_properties_action" model="ir.actions.act_window">
-        <field name="name">Tags action</field>
-        <field name="res_model">estate_property_tag</field>
-        <field name="view_mode">tree,form</field>
-    </record>
-
+    <!-- ********************************************************************************** -->
+    <!-- View estate_property_tag -->
+    <!-- ********************************************************************************** -->
     <record id="estate_property_tag_view_tree" model="ir.ui.view">
         <field name="name">estate_property_tag.view.tree</field>
         <field name="model">estate_property_tag</field>
@@ -140,6 +163,9 @@
         </field>
     </record>
 
+    <!-- ********************************************************************************** -->
+    <!-- View offer -->
+    <!-- ********************************************************************************** -->
     <record id="offer_view_tree" model="ir.ui.view">
         <field name="name">Offer</field>
         <field name="model">estate_property_offer</field>
@@ -160,18 +186,26 @@
         </field>
     </record>
 
+    <!-- ********************************************************************************** -->
+    <!-- View Form estate_property_type -->
+    <!-- ********************************************************************************** -->
     <record id="estate_property_type_view_form" model="ir.ui.view">
         <field name="name">estate_property_type.view.form</field>
         <field name="model">estate_property_type</field>
         <field name="arch" type="xml">
             <form string="">
                 <sheet>
+                    <header>
+                        <button name="open_type_offer_related_action" type="object"
+                            class="oe_stat_button" icon="fa-money">
+                        </button>
+                    </header>
                     <group>
                         <field name="name" />
                     </group>
                     <group>
                         <field name="property_ids">
-                            <tree editable="buttom">
+                            <tree editable="bottom">
                                 <field name="name" />
                                 <field name="expected_price" />
                                 <field name="state" widget='statusbar' />
@@ -183,6 +217,9 @@
         </field>
     </record>
 
+    <!-- ********************************************************************************** -->
+    <!-- View Tree estate_property_type -->
+    <!-- ********************************************************************************** -->
     <record id="estate_property_type_view_tree" model="ir.ui.view">
         <field name="name">estate_property_type.view.tree</field>
         <field name="model">estate_property_type</field>
@@ -190,6 +227,22 @@
             <tree string="">
                 <field name="sequence" widget="handle" />
                 <field name="name" />
+            </tree>
+        </field>
+    </record>
+
+    <!-- ********************************************************************************** -->
+    <!-- View type_offer_related -->
+    <!-- ********************************************************************************** -->
+    <record id="type_offer_related_view_tree" model="ir.ui.view">
+        <field name="name">estate_property_offer.view.tree</field>
+        <field name="model">estate_property_offer</field>
+        <field name="arch" type="xml">
+            <tree string="">
+                <field name="partner_id" />
+                <field name="price" />
+                <field name="status" />
+                <field name="date_deadline" />
             </tree>
         </field>
     </record>
