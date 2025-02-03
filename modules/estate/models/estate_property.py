@@ -194,10 +194,10 @@ class Offer(models.Model):
         if property_id.offer_ids and vals['price'] < max(property_id.offer_ids.mapped('price'), default= 0):
             raise UserError("No se puede crear una oferta menor a las ya existentes!")
         offer =super(Offer,self).create(vals)
-        if property.state == 'new':
-            property_id.state = 'offer received'
-        
-        return offer
+        if vals.get('state') == 'new':
+            vals['state'] = 'offer_received'
+
+        return super().create(vals)
 class resUser(models.Model):
     _inherit="res.users"
     property_ids= fields.One2many('estate.property', 'salesperson_id', domain=[('active', '=', True)])
