@@ -1,0 +1,436 @@
+
+
+# Explicación del Código en Odoo
+
+
+---
+
+## 1. Importaciones y Configuración Inicial
+
+```python
+from odoo import fields, models, api
+from datetime import datetime, timedelta
+from odoo.exceptions import UserError, ValidationError
+```
+
+- **`fields, models, api`**: Módulos de Odoo utilizados para definir campos en los modelos, heredar de `models.Model` y aplicar decoradores de la API.
+- **`datetime, timedelta`**: Se utilizan para trabajar con fechas, como calcular fechas de disponibilidad o plazos.
+- **`UserError, ValidationError`**: Excepciones que se lanzan cuando ocurre un error de negocio, informando al usuario de forma amigable.
+
+---
+
+## 2. Modelo Principal: `TestModel` (`test.model`)
+
+Este modelo representa una propiedad inmobiliaria.
+
+### Definición y Campos Básicos
+
+```python
+class TestModel(models.Model):
+    _name = "test.model"
+    _description = "Test Model"
+    _order = 'id desc'
+
+    name = fields.Char(required=True)
+    description = fields.Text()
+    postal_code = fields.Char()
+    expected_price = fields.Float(required=True)
+    price_sold = fields.Float(readonly=True, copy=False)
+    rooms = fields.Integer(default=2)
+    living_area = fields.Integer()
+    facades = fields.Integer()
+    garage = fields.Integer(default=2)
+    garden = fields.Boolean("Garden", default=False)
+    garden_area = fields.Integer()
+    date_available = fields.Date(copy=False, default=lambda self: datetime.today() + timedelta(days=90))
+    active = fields.Boolean("Active", default=True)
+    stat = fields.Selection(
+        [
+            ("New", "new"),
+            ('Sold', 'sold'),
+            ('Offer Received', 'offer received'),
+            ('Cancelled', 'cancelled'),
+            ('Offer Accepted', 'offer accepted')
+        ],
+        default="New", copy=False,
+    )
+    garden_orientation = fields.Selection([('north', 'North'), ('south', 'South'), ('east', 'East'), ('west', 'West')])
+```
+
+- **Campos de Tipo Básico:**  
+  Se definen campos como `name`, `description`, `postal_code`, `expected_price`, entre otros, que describen las características de una propiedad.
+  
+- **Campo `date_available`:**  
+  Se asigna por defecto la fecha actual más 90 días, utilizando una función lambda.
+
+- **Campo `stat`:**  
+  Es un campo de selección que representa el estado de la propiedad (e.g., "New", "Sold", "Offer Received", etc.).
+
+### Campos Computados
+
+- **`total_area`:**  
+  Calcula el área total sumando `living_area` y `garden_area`.  
+  Se utiliza el decorador `@api.depends` para que se actualice automáticamente cuando cambien los campos dependientes.
+
+  ```python
+  total_area = fields.Float(compute='_compute_total_area', store=True)
+
+  @api.depends('living_area', 'garden_area')
+  def _compute_total_area(self):
+      for record in self:
+          record.total_area = record.living_area + record.garden_area
+  ```
+
+- **`best_price`:**  
+  Calcula el mejor precio (el máximo) entre todas las ofertas realizadas (`offer_ids`).  
+  Se marca como campo computado con dependencia a `offer_ids.price`.
+
+  ```python
+  best_price = fields.Float(compute='_compute_best_price', store=True)
+
+  @api.depends('offer_ids.price')
+  def _compute_best_price(self):
+      for record in self:
+          record.best_price = max(record.offer_ids.mapped('price'), default=0.0)
+  ```
+
+### Relaciones con Otros Modelos
+
+- **`type_id`:** Relación `Many2one` con el modelo `type.properties`.  
+- **`tag_ids`:** Relación `Many2many` con el modelo `test.tag`.  
+- **`salesman_id`:** Relación `Many2one` con `res.users` (vendedor asignado).  
+- **`buyer_id`:** Relación `Many2one` con `res.partner` (comprador).  
+- **`offer_ids`:** Relación `One2many` con el modelo `test.offer`, que agrupa las ofertas relacionadas a la propiedad.
+
+### Restricciones SQL
+
+```python
+_sql_constraints = [
+    ('expected_price', 'CHECK(expected_price > 0)', 'The expected price must more than 0 .')
+]
+_sql_constraints = [
+    ('unique_tag_name', 'UNIQUE(name)', 'El nombre de la propiedad debe ser unico')
+]
+```
+
+> **Nota:** Definir `_sql_constraints` dos veces sobrescribe el primero, por lo que es recomendable agrupar todas las restricciones en una única lista.
+
+### Métodos de Acción en `TestModel`
+
+- **`action_cancel`:**  
+  Cancela la propiedad cambiando el estado a `Cancelled`.  
+  Si la propiedad ya está vendida, lanza un `UserError`.
+
+  ```python
+  def action_cancel(self):    
+      for reco in self: 
+          if reco.stat == "Sold":
+              raise UserError("No puedes cancelar una propiedad vendida.")
+          reco.stat = 'Cancelled'
+          return True
+  ```
+
+- **`action_sold`:**  
+  Marca la propiedad como vendida.  
+  Si la propiedad está cancelada, se lanza un error.
+
+  ```python
+  def action_sold(self):
+      for reco in self:
+          if reco.stat == "Cancelled":
+              raise UserError("No puedes comprar una propiedad Cancelada")
+          reco.stat = "Sold"
+  ```
+
+- **`@api.onchange('garden') _onchange_garden`:**  
+  Actualiza los campos `garden_area` y `garden_orientation` en función del valor del campo `garden`.
+
+  ```python
+  @api.onchange('garden')
+  def _onchange_garden(self):
+      if not self.garden:
+          self.garden_area = 0
+          self.garden_orientation = False
+      else:
+          self.garden_area = 10
+          self.garden_orientation = 'north'
+  ```
+
+- **`@api.ondelete(prevent_delete)`:**  
+  Impide eliminar propiedades que no estén en estado "New" o "Cancelled".
+
+  ```python
+  @api.ondelete(at_uninstall=False)
+  def prevent_delete(self):
+      for reco in self:
+          if reco.stat not in ['New', 'Cancelled']:
+              raise UserError('No se puede eliminar una propiedad que no sea Nueva o este Cancelada')
+  ```
+
+---
+
+## 3. Modelo de Etiquetas: `EstatePropertyTag` (`test.tag`)
+
+Este modelo gestiona las etiquetas asociadas a las propiedades.
+
+```python
+class EstatePropertyTag(models.Model):
+    _name = "test.tag"
+    _description = "Estate Property Tags"
+    _order = 'name'
+
+    name = fields.Char(required=True)
+    color = fields.Integer(string="Color")
+
+    _sql_constraints = [
+        ('unique_tag_name', 'UNIQUE(name)', 'El nombre de la etiqueta debe ser unico')
+    ]
+```
+
+- **Campos:**  
+  - `name`: Nombre de la etiqueta (obligatorio y único).  
+  - `color`: Campo numérico para asociar un color (útil para la visualización).
+
+---
+
+## 4. Modelo de Tipos de Propiedad: `PropertiesType` (`type.properties`)
+
+Define los diferentes tipos de propiedades (por ejemplo, apartamento, casa, etc.).
+
+```python
+class PropertiesType(models.Model):
+    _name = "type.properties"
+    _description = "Type Properties"
+    _order = 'name'
+
+    name = fields.Char(required=True)
+    sequence = fields.Integer('Sequence')
+    offer_count = fields.Integer()
+    offer_ids = fields.One2many('test.offer', 'property_type_id', string='Offers')
+    property_ids = fields.One2many(
+        'test.model',
+        'type_id',
+        string='Properties'
+    )
+
+    _sql_constraints = [
+        ('unique_type_name', 'UNIQUE(name)', 'El nombre del tipo de propiedad debe ser unico')
+    ]
+```
+
+- **Relaciones:**  
+  - `offer_ids`: Permite acceder a todas las ofertas asociadas al tipo.  
+  - `property_ids`: Relaciona las propiedades que pertenecen a este tipo.
+
+### Método de Acción
+
+- **`state_property_offer_action`:**  
+  Retorna una acción para mostrar en una ventana todas las ofertas asociadas a este tipo de propiedad.
+
+  ```python
+  def state_property_offer_action(self):
+      return {
+          'name': 'Offers',
+          'type': 'ir.actions.act_window',
+          'res_model': 'test.offer',
+          'view_mode': 'tree,form',
+          'domain': [('property_type_id', '=', self.id)],
+          'context': {'default_property_type_id': self.id},
+      }
+  ```
+
+---
+
+## 5. Modelo de Ofertas: `Offer` (`test.offer`)
+
+Representa las ofertas realizadas por los clientes sobre las propiedades.
+
+```python
+class Offer(models.Model):
+    _name = 'test.offer'
+    _order = 'price desc'
+    _description = "Offers related to properties"
+
+    price = fields.Float(string="Offer Price")
+    stat = fields.Selection([
+        ('acepted', 'Acepted'),
+        ('refused', 'Refused'),
+    ], copy=False)
+    partner_id = fields.Many2one(
+        'res.partner',
+        string="Partner",
+        required=True,
+    )
+    property_type_id = fields.Many2one(
+        'type.properties', 'type_id'
+    )
+    validy = fields.Integer(string="Validy", default=7)
+    date_deadline = fields.Date(
+        string="Deadline",
+        compute="_compute_date_deadline",
+        inverse="_inverse_date_deadline",
+        store=True
+    )
+    property_id = fields.Many2one(
+        'test.model',
+        string="Property",
+        required=True
+    )
+```
+
+### Funciones Computadas e Inversa
+
+- **`_compute_date_deadline`:**  
+  Calcula la fecha límite sumando el valor de `validy` a la fecha actual.
+
+  ```python
+  @api.depends('validy')
+  def _compute_date_deadline(self):
+      for record in self:
+          record.date_deadline = datetime.today() + timedelta(days=record.validy)
+  ```
+
+- **`_inverse_date_deadline`:**  
+  Permite actualizar el campo `validy` si se modifica manualmente la fecha límite.
+
+  ```python
+  def _inverse_date_deadline(self):
+      for record in self:
+          if record.date_deadline:
+              delta = (record.date_deadline - datetime.today().date()).days
+              record.validy = delta
+  ```
+
+### Métodos de Acción en Ofertas
+
+- **`action_accept`:**  
+  - Verifica que la propiedad asociada no esté ya vendida.  
+  - Comprueba que el precio ofertado sea al menos el 90% del precio esperado de la propiedad.  
+  - Si se cumplen las condiciones, se marca la oferta como aceptada, se actualiza el estado de la propiedad a "Sold", se registra el precio de venta y se asigna el comprador.
+
+  ```python
+  def action_accept(self):
+      for reco in self:
+          if reco.property_id.stat == 'Sold':
+              raise UserError("No puedes aceptar una oferta para una propiedad vendida")
+          elif (reco.price >= reco.property_id.expected_price * 0.9):
+              reco.stat = 'acepted'
+              reco.property_id.stat = 'Sold'
+              reco.property_id.price_sold = reco.price
+              reco.property_id.buyer_id = reco.partner_id
+          else:
+              raise ValidationError("El precio debe al menos el 90 porciento del precio esperado ;")
+          return True
+  ```
+
+- **`action_refuse`:**  
+  Marca la oferta como rechazada.
+
+  ```python
+  def action_refuse(self):
+      for reco in self:
+          reco.stat = "refused"
+      return True
+  ```
+
+### Sobreescritura del Método `create`
+
+El método `create` se sobreescribe para incluir lógica de negocio adicional:
+
+- Se verifica que, si ya existen ofertas para la propiedad, el precio de la nueva oferta no sea inferior al máximo precio existente.  
+- Si la condición no se cumple, se lanza un `UserError`.  
+- Una vez creada la oferta, se actualiza el estado de la propiedad a "Offer Received".
+
+```python
+@api.model
+def create(self, vals):
+    property_id = self.env['test.model'].browse(vals['property_id'])
+    if property_id.offer_ids and vals['price'] < max(property_id.offer_ids.mapped('price')):
+        raise UserError("No se puede crear una oferta menor a las ya existentes!")
+    offer = super(Offer, self).create(vals)
+    property_id.stat = 'Offer Received'
+    return offer
+```
+
+---
+
+## 6. Extensión del Modelo `ResUser`
+
+Se extiende el modelo `res.users` para asociar a cada usuario (vendedor) las propiedades que estén activas.
+
+```python
+class ResUser(models.Model):
+    _inherit = "res.users"
+    property_ids = fields.One2many(
+        comodel_name="test.model",
+        inverse_name="salesman_id",
+        string='Properties',
+        domain=[('active', '=', 'True')]
+    )
+```
+
+- **Relación:**  
+  El campo `property_ids` permite acceder, desde el usuario, a todas las propiedades que están asignadas a él y que se encuentran activas.
+
+---
+
+## Aspectos Clave y Funcionamiento en Odoo
+
+### Decoradores de la API
+
+- **`@api.depends`**:  
+  Declara que un campo computado depende de otros campos. Cuando estos cambian, se recalcula el campo dependiente.
+
+- **`@api.onchange`**:  
+  Se utiliza para ejecutar funciones cuando cambia el valor de un campo en la vista, permitiendo actualizar otros campos sin necesidad de guardar el registro.
+
+- **`@api.ondelete`**:  
+  Permite definir reglas para la eliminación de registros. En este ejemplo, impide eliminar propiedades que no cumplan con los criterios establecidos.
+
+- **`@api.model`**:  
+  Se emplea para métodos que actúan sobre el modelo completo, sin necesidad de estar asociados a un registro concreto (por ejemplo, al sobreescribir el método `create`).
+
+### Relaciones entre Modelos
+
+- **Many2one:**  
+  Muchos registros de un modelo se relacionan con un único registro de otro.  
+  Ejemplo: Cada propiedad (`test.model`) tiene un único tipo (`type.properties`).
+
+- **One2many:**  
+  Es la inversa de Many2one, permitiendo acceder a un conjunto de registros relacionados.  
+  Ejemplo: Desde una propiedad se pueden ver todas las ofertas (`test.offer`) asociadas.
+
+- **Many2many:**  
+  Permite relacionar múltiples registros de un modelo con múltiples registros de otro.  
+  Ejemplo: Las propiedades pueden tener varias etiquetas (`test.tag`) y cada etiqueta puede estar asignada a varias propiedades.
+
+### Restricciones y Validaciones
+
+- **Restricciones SQL:**  
+  Se aplican para garantizar la integridad de los datos a nivel de base de datos, como asegurarse de que el `expected_price` sea mayor que 0 o que los nombres sean únicos.
+
+- **Validaciones en los Métodos:**  
+  Se utilizan `UserError` y `ValidationError` para detener operaciones que no cumplan con las reglas de negocio, por ejemplo, no permitir la aceptación de ofertas con un precio inferior al 90% del precio esperado.
+
+### Funciones de Acción
+
+- Los métodos `action_cancel`, `action_sold`, `action_accept` y `action_refuse` implementan la lógica de negocio necesaria para cambiar el estado de la propiedad u oferta.  
+- Estas funciones aseguran la consistencia de los datos y facilitan la interacción del usuario con el sistema.
+
+---
+
+## Conclusión
+
+El código muestra cómo se pueden aplicar buenas prácticas en Odoo mediante:
+
+- **Uso de campos computados y dependientes:**  
+  Permite que la información derivada se actualice automáticamente al cambiar los campos base.
+
+- **Implementación de relaciones entre modelos:**  
+  Facilita la navegación y manejo de datos relacionados, como propiedades, ofertas, tipos y etiquetas.
+
+- **Validaciones y restricciones:**  
+  Garantizan la integridad de los datos y el cumplimiento de las reglas de negocio.
+
+- **Uso de decoradores de la API de Odoo:**  
+  Permiten reaccionar a cambios en los datos, personalizar la creación de registros y controlar acciones de eliminación.
