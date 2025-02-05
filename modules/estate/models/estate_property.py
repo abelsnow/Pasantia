@@ -29,7 +29,7 @@ class TestModel(models.Model):
     type_id = fields.Many2one('estate_property_type', string='types')
     vendedor_id = fields.Many2one('res.partner', string='vendedor', default = lambda self: self.env.user)
     comprador_id = fields.Many2one('res.users', string='comprador')
-    offer_ids = fields.Many2many('estate_property_offer', string='ofertas')
+    offer_ids = fields.One2many('estate_property_offer', 'property_id', string='offer_ids')
     total_area = fields.Integer(compute="_compute_total", string="area total")
     best_price = fields.Float(compute="_compute_best_price", string="mejor precio")
     _sql_constraints = [
@@ -56,6 +56,12 @@ class TestModel(models.Model):
         else:
             self.garden_orientation = False
             self.garden_area = 0
+
+    @api.ondelete(at_uninstall=False)
+    def delete(self):
+        for record in self:
+            if record.state not in ['nuevo', 'cancelado']:
+                raise UserError("No se puede eliminar una propiedad en ese estado")
 
     def vender(self):
         for record in self:
@@ -87,6 +93,8 @@ class tipo(models.Model):
 
     name = fields.Char(required=True)
     property_ids = fields.One2many('test_model', 'type_id', string='property')
+    offer_ids = fields.One2many('estate_property_offer', 'property_type_id', string='offer_ids')
+    offer_count = fields.Integer(compute='_compute_offer_count', string='Offer counts')
     sequence = fields.Integer('sequence')
 
     def open_type_offer_related_action(self):
@@ -95,8 +103,14 @@ class tipo(models.Model):
             "name": "type_offer_related_action",
             "res_model": "estate_property_offer",
             "view_mode": "tree,form",
-            "domain": [("property_id.type_id", "=", self.id)]
+            "domain": [("property_type_id", "=", self.id)],
+            "context": {"default_property_type_id": self.id}
         }
+    
+    @api.depends('offer_ids')
+    def _compute_offer_count(self):
+        for record in self:
+            record.offer_count = len(record.offer_ids)
 
 # -----------------------------------------------------------------------------------------------------------
 # Clase tag (estate_property_tag)
@@ -125,6 +139,7 @@ class oferta(models.Model):
     property_id = fields.Many2one('test_model', string='Propiedad', required=True)
     property_type_id = fields.Many2one('estate_property_type', string='Ofertas del tipo')
     offer_type = fields.Char(related='property_type_id.name')
+    active_id = fields.Boolean(related='property_id.active')
     _sql_constraints = [('price_positive','CHECK(price > 0)','El precio debe ser estrictamente mayor que cero')]
 
     @api.depends('validity')
@@ -156,5 +171,24 @@ class oferta(models.Model):
             if record.price < 0.9 * record.property_id.expected_price:
                 raise ValidationError("La propiedad no se puede vender a un valor menor que el 90%")
             
+    @api.model
+    def create(self, vals):
+        property_id = self.env['test_model'].browse(vals['property_id'])
+        if property_id.offer_ids and vals["price"]  >= max(property_id.offer_ids.mapped('price')):
+            offer = super(oferta, self).create(vals)
+            property_id.state = 'oferta_recibida'
+            return offer
+        elif not property_id.offer_ids:
+            offer = super(oferta, self).create(vals)
+            property_id.state = 'oferta_recibida'
+            return offer
+        else:
+            raise UserError("No se puede crear la oferta porque es demasiado baja")
 
-            
+# -----------------------------------------------------------------------------------------------------------
+# Clase resUser 
+# -----------------------------------------------------------------------------------------------------------
+class resUser(models.Model):
+    _inherit = "res.users"
+
+    property_ids = fields.One2many('test_model', 'vendedor_id', string='Propiedades', domain=[('active', '=', True)])

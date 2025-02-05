@@ -30,7 +30,7 @@
     </record>
 
     <!-- ********************************************************************************** -->
-    <!-- View test_model -->
+    <!-- View form test_model -->
     <!-- ********************************************************************************** -->
     <record id="test_model_view_form" model="ir.ui.view">
         <field name="name">test_model.form</field>
@@ -42,6 +42,7 @@
                         invisible="state == 'oferta_recibida' or state == 'vendido' or state== 'cancelado'" />
                     <button name="vender" type="object" string="Vender"
                         invisible="state == 'oferta_recibida' or state == 'vendido' or state== 'cancelado'" />
+                    <field name="state" widget="statusbar" options="{'clickable': 'true'}" />
                 </header>
                 <sheet>
                     <group>
@@ -71,7 +72,6 @@
                                 </group>
                                 <group string="Otras informaciones">
                                     <field name="active" />
-                                    <field name="state" />
                                     <field name="facades" />
                                 </group>
                                 <group string="Tipo de propiedad">
@@ -100,7 +100,7 @@
 
 
     <!-- ********************************************************************************** -->
-    <!-- View estate_property -->
+    <!-- View tree test_model -->
     <!-- ********************************************************************************** -->
     <record id="estate_property_list_view" model="ir.ui.view">
         <field name="name">test_model_tree</field>
@@ -164,29 +164,6 @@
     </record>
 
     <!-- ********************************************************************************** -->
-    <!-- View offer -->
-    <!-- ********************************************************************************** -->
-    <record id="offer_view_tree" model="ir.ui.view">
-        <field name="name">Offer</field>
-        <field name="model">estate_property_offer</field>
-        <field name="arch" type="xml">
-            <tree string="Ofertas" editable="bottom" decoration-danger="status == 'rechazado'"
-                decoration-success="status == 'aceptado'">
-                <field name="price" string="Precio" />
-                <field name="status" string="Estado" />
-                <button name="action_aceptar" string="Aceptar" type="object"
-                    icon="fa-check" invisible="status == 'aceptado' or status == 'rechazado'" />
-                <button name="action_rechazar" string="Rechazar" type="object"
-                    icon="fa-times" invisible="status == 'aceptado' or status == 'rechazado'" />
-                <field name="validity" string="Validez" />
-                <field name="date_deadline" string="Fecha limite" />
-                <field name="partner_id" string="SocioID" />
-                <field name="property_id" string="PropiedadID" />
-            </tree>
-        </field>
-    </record>
-
-    <!-- ********************************************************************************** -->
     <!-- View Form estate_property_type -->
     <!-- ********************************************************************************** -->
     <record id="estate_property_type_view_form" model="ir.ui.view">
@@ -197,7 +174,8 @@
                 <sheet>
                     <header>
                         <button name="open_type_offer_related_action" type="object"
-                            class="oe_stat_button" icon="fa-money">
+                            class="oe_stat_button" icon="fa-money" string="Ofertas de tipo">
+                            <field name="offer_count" string="" widget="statinfo" />
                         </button>
                     </header>
                     <group>
@@ -232,19 +210,51 @@
     </record>
 
     <!-- ********************************************************************************** -->
-    <!-- View type_offer_related -->
+    <!-- View estate_property_offer -->
     <!-- ********************************************************************************** -->
-    <record id="type_offer_related_view_tree" model="ir.ui.view">
+    <record id="estate_property_offer_view_tree" model="ir.ui.view">
         <field name="name">estate_property_offer.view.tree</field>
         <field name="model">estate_property_offer</field>
         <field name="arch" type="xml">
-            <tree string="">
-                <field name="partner_id" />
-                <field name="price" />
-                <field name="status" />
-                <field name="date_deadline" />
+            <tree string="Ofertas" editable="bottom" decoration-danger="status == 'rechazado'"
+                decoration-success="status == 'aceptado'">
+                <field name="price" string="Precio" />
+                <field name="status" string="Estado" />
+                <button name="action_aceptar" string="Aceptar" type="object"
+                    icon="fa-check" invisible="status == 'aceptado' or status == 'rechazado'" />
+                <button name="action_rechazar" string="Rechazar" type="object"
+                    icon="fa-times" invisible="status == 'aceptado' or status == 'rechazado'" />
+                <field name="validity" string="Validez" />
+                <field name="date_deadline" string="Fecha limite" />
+                <field name="partner_id" string="SocioID" />
+                <field name="property_id" string="PropiedadID" />
             </tree>
         </field>
     </record>
+
+    <!-- ********************************************************************************** -->
+    <!-- View estate_property_inherited -->
+    <!-- ********************************************************************************** -->
+
+    <record id="view_users_form" model="ir.ui.view">
+        <field name="name">res.users.form.inherit</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form" />
+        <field name="arch" type="xml">
+            <notebook position="inside">
+                <page string="Properties">
+                    <field name="property_ids" widget="one2many_list" readonly="1">
+                        <tree>
+                            <field name="name" string="Propiedad" />
+                            <field name="postcode" string="Código Postal" />
+                            <field name="expected_price" string="Precio Esperado" />
+                            <field name="state" string="Estado" />
+                        </tree>
+                    </field>
+                </page>
+            </notebook>
+        </field>
+    </record>
+
 
 </odoo>
