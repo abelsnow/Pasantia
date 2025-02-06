@@ -27,8 +27,8 @@ class TestModel(models.Model):
     state = fields.Selection([('nuevo','Nuevo'),('oferta_recibida','Oferta recibida'),('oferta_aceptada','Oferta aceptada'),('vendido','Vendido'),('cancelado','Cancelado')], default = 'nuevo', required = True)
     tag_ids = fields.Many2many('estate_property_tag', string='tags')
     type_id = fields.Many2one('estate_property_type', string='types')
-    vendedor_id = fields.Many2one('res.partner', string='vendedor', default = lambda self: self.env.user)
-    comprador_id = fields.Many2one('res.users', string='comprador')
+    vendedor_id = fields.Many2one('res.partner', string='vendedor', default = lambda self: self.env.user, readonly=True)
+    comprador_id = fields.Many2one('res.partner', string='comprador')
     offer_ids = fields.One2many('estate_property_offer', 'property_id', string='offer_ids')
     total_area = fields.Integer(compute="_compute_total", string="area total")
     best_price = fields.Float(compute="_compute_best_price", string="mejor precio")
@@ -186,7 +186,7 @@ class oferta(models.Model):
             raise UserError("No se puede crear la oferta porque es demasiado baja")
 
 # -----------------------------------------------------------------------------------------------------------
-# Clase resUser 
+# Clase resUser (que hereda res.users)
 # -----------------------------------------------------------------------------------------------------------
 class resUser(models.Model):
     _inherit = "res.users"

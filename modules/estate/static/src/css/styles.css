@@ -1,0 +1,79 @@
+/* Mejora visual general */
+.o_form_sheet { 
+    background-color: #ffffff; 
+    padding: 30px; 
+    border-radius: 12px; 
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    border: 1px solid #ddd;
+}
+.o_form_view { 
+    background-color: #f4f6f9; 
+    padding: 20px;
+    border-radius: 8px;
+}
+
+/* Mejor distribución de los formularios */
+.o_group { 
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 20px;
+    align-items: start;
+}
+
+/* Tarjetas Kanban mejoradas */
+.oe_kanban_card { 
+    border: 1px solid #ccc; 
+    border-radius: 12px; 
+    padding: 15px; 
+    background: #ffffff; 
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+.oe_kanban_card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Botones destacados */
+.oe_highlight { 
+    background-color: #ff5722; 
+    color: white; 
+    padding: 8px 12px; 
+    border-radius: 6px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+/* Mejor apariencia de etiquetas Many2Many */
+.o_field_widget.o_field_many2many_tags .o_tag_color_0 { 
+    background-color: #ff4081 !important; 
+    color: white;
+    font-weight: bold;
+    padding: 4px 8px;
+    border-radius: 5px;
+}
+
+/* Listado más claro */
+.o_list_view tbody tr.o_data_row td { 
+    padding: 12px; 
+    border-bottom: 1px solid #eee;
+}
+.o_list_view tbody tr.o_data_row:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+/* Mejoras en el Notebook */
+.o_notebook { 
+    padding: 15px;
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Encabezados más atractivos */
+.o_form_view .oe_title { 
+    font-size: 1.75em; 
+    color: #2c3e50; 
+    font-weight: bold; 
+    text-align: center;
+    text-transform: uppercase;
+}

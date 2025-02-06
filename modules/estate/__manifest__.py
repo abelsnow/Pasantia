@@ -21,7 +21,11 @@
     'demo': [],
     'installable': True,
     'application': True,
-    'assets': {},
+    'assets': {
+    'web.assets_backend': [
+        'estate/static/src/css/styles.css',
+        ],
+    },
     'license': '',
 
 }
