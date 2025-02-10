@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    
+    <record id="inventario_ubicacion_action" model="ir.actions.act_window">
+        <field name="name">Ubicaciones de Almacenes</field>
+        <field name="res_model">inventario_ubicacion</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    
+
+   
+     <record id="inventario_ubicacion_view_form" model="ir.ui.view">
+        <field name="name">inventario_ubicacion.view.form</field>
+        <field name="model">inventario_ubicacion</field>
+        <field name="arch" type="xml">
+            <form string="Ubicación">
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="ciudad"/>
+                    </group>
+                    <notebook>
+                        
+                        <page string="Almacenes en esta Ubicación">
+                            <field name="almacen_id">
+                                <tree>
+                                    <field name="name"/>
+                                </tree>
+                            </field>
+                        </page>
+
+                        
+                        <page string="Productos en esta Ubicación">
+                            <field name="almacen_id" nolabel="1">
+                                <tree>
+                                    <field name="name"/>
+                                    <field name="producto_ids">
+                                        <tree>
+                                            <field name="name"/>
+                                            <field name="stock"/>
+                                            <field name="estado"/>
+                                        </tree>
+                                    </field>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>

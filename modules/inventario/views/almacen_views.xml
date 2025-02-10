@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="invetario_almacen_action" model="ir.actions.act_window">
+        <field name="name">Action Name</field>
+        <field name="res_model">invetario_almancen</field>
+        <field name="view_mode">tree,form</field>            
+        </field>
+    </record>
+    <record id="almacen_view_form" model="ir.ui.view">
+    <field name="name">inventario_almacen.view.form</field>
+    <field name="model">inventario_almacen</field>
+    <field name="arch" type="xml">
+        <form string="Almacén">
+            <sheet>
+                <group>
+                    <field name="name"/>
+                    <field name="ubicacion_id"/>
+                    <field name="productos_vendidos"/>
+                </group>
+                <notebook>
+                    <page string="Productos en este almacén">
+                        <field name="producto_ids" nolabel="1">
+                            <tree default_order="ingresos_totales desc">
+                                <field name="name"/>
+                                <field name="stock"/>
+                                <field name="cantidad_vendida"/>
+                                <field name="ingresos_totales"/> 
+                            </tree>
+                        </field>
+                    </page>
+                </notebook>
+            </sheet>
+        </form>
+    </field>
+</record>
+
+</odoo>

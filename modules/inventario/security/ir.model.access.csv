@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+acces_producto,acces_producto,model_producto,base.group_user,1,1,1,1
+acces_inventario_ubicacion,acces_inventario_ubicacion,model_inventario_ubicacion,base.group_user,1,1,1,1
+acces_inventario_almacen,acces_inventario_almacen,model_inventario_almacen,base.group_user,1,1,1,1
+acces_inventario_lote,acces_inventario_lote,model_inventario_lote,base.group_user,1,1,1,1

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Menú principal -->
+    <menuitem
+        id="productos_menu_root"
+        name="Productos"
+        sequence="1"/>
+
+    <!-- Submenú -->
+    <menuitem
+        id="producto_menu"
+        name="Gestión de Productos"
+        action="producto_action"
+        parent="productos_menu_root"
+        sequence="2"/>
+
+    <menuitem
+        id="inventario_ubicacion_menu"
+        name="Ubicaciones de Inventario"
+        action="inventario_ubicacion_action"
+        parent="productos_menu_root"
+        sequence="3"/>
+    
+    <menuitem
+        id="inventario_menu"
+        name="Lote de inventario"
+        action="inventario.lote_action"
+        parent="productos_menu_root"
+        sequence="10"/>
+</odoo>

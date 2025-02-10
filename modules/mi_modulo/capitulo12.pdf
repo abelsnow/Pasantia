@@ -1,0 +1,176 @@
+**Modularidad en Odoo y Herencia de Modelos**
+
+### **1. Introducción a la Modularidad en Odoo**
+Uno de los aspectos más poderosos de Odoo es su modularidad. Un módulo está diseñado para satisfacer una necesidad específica del negocio, pero también puede interactuar con otros módulos para extender su funcionalidad.
+
+Por ejemplo, en un escenario inmobiliario, podría ser útil mostrar la lista de propiedades de un vendedor directamente en la vista de usuario.
+
+Antes de ver la herencia específica de los módulos en Odoo, primero entenderemos cómo podemos alterar el comportamiento de los métodos CRUD estándar.
+
+---
+
+### **2. Herencia en Python y Odoo**
+En Odoo, los modelos heredan de `models.Model`, lo que les proporciona los métodos CRUD (“Create, Retrieve, Update, Delete”):
+
+```python
+from odoo import fields, models
+
+class TestModel(models.Model):
+    _name = "test_model"
+    _description = "Test Model"
+```
+
+Esta clase hereda de `models.Model`, por lo que ya tiene implementados los métodos `create()`, `read()`, `write()` y `unlink()`.
+
+Estos métodos pueden ser sobrescritos para agregar lógica de negocio específica:
+
+```python
+from odoo import api, fields, models
+
+class TestModel(models.Model):
+    _name = "test_model"
+    _description = "Test Model"
+
+    @api.model
+    def create(self, vals):
+        vals['name'] = vals.get('name', '').upper()
+        return super().create(vals)
+```
+
+---
+
+### **3. Decorador `@api.model` en `create()`**
+El decorador `@api.model` se usa en Odoo cuando un método **no depende de registros existentes**, es decir, no necesita `self` como conjunto de registros.
+
+Dado que en `create()` el registro aún no existe en la base de datos, `self` no contiene ninguna instancia, por lo que se usa `@api.model`.
+
+---
+
+### **4. Eliminación de Registros: `unlink()` y `@api.ondelete()`**
+
+#### **4.1 `unlink()`**
+Se usa para eliminar registros. Puede ser sobrescrito para controlar la eliminación:
+
+```python
+class TestModel(models.Model):
+    _name = "test_model"
+
+    def unlink(self):
+        for record in self:
+            if record.state not in ['new', 'canceled']:
+                raise ValueError("No se puede eliminar una propiedad que no esté en estado 'New' o 'Canceled'")
+        return super().unlink()
+```
+
+#### **4.2 `@api.ondelete()`**
+
+Es mejor usar `@api.ondelete()` en lugar de sobrescribir `unlink()`, ya que evita problemas al desinstalar un módulo:
+
+```python
+class TestModel(models.Model):
+    _name = "test_model"
+
+    @api.ondelete(at_uninstall=False)
+    def _prevent_delete(self):
+        for record in self:
+            if record.state not in ['new', 'canceled']:
+                raise ValueError("No se puede eliminar una propiedad que no esté en estado 'New' o 'Canceled'")
+```
+
+---
+
+### **5. Uso de `super()` en Python 3**
+
+En Python 3, `super()` se usa para llamar a métodos de la clase padre:
+
+```python
+super().method_name()
+```
+
+Esto es equivalente a:
+
+```python
+super(ClassName, self).method_name()
+```
+
+Siempre se debe llamar a `super()` en los métodos sobrescritos para mantener el flujo de Odoo.
+
+---
+
+### **6. Ejercicios Prácticos**
+
+#### **Ejercicio 1: Evitar Eliminación de Propiedades**
+- Impedir la eliminación de una propiedad si su estado no es 'New' o 'Canceled'.
+- Usar `@api.ondelete()` para manejar esta restricción.
+
+#### **Ejercicio 2: Lógica en la Creación de Ofertas**
+- Cambiar el estado de la propiedad a "Offer Received" cuando se cree una oferta.
+- No permitir crear una oferta con un monto menor a una oferta existente.
+
+**Tip:** Para convertir un `id` en un objeto de modelo, se usa `self.env[model_name].browse(value)`.
+
+---
+
+### **7. Herencia de Modelos en Odoo**
+Odoo ofrece dos mecanismos de herencia:
+
+1. **Herencia Clásica:**
+   - Agrega nuevos campos a un modelo.
+   - Sobrescribe la definición de campos.
+   - Agrega métodos o sobrescribe existentes.
+
+2. **Herencia por Delegación:**
+   - Enlaza un modelo con otro y accede a sus campos de manera transparente.
+
+Ejemplo de herencia clásica:
+
+```python
+from odoo import fields, models
+
+class InheritedModel(models.Model):
+    _inherit = "res.users"
+
+    property_ids = fields.One2many('estate.property', 'salesperson_id', string="Properties")
+```
+
+**Ejercicio:**
+- Agregar el campo `property_ids` al modelo `res.users`.
+- Agregar un dominio para listar solo propiedades disponibles.
+
+---
+
+### **8. Herencia de Vistas en Odoo**
+
+En lugar de modificar vistas directamente, Odoo usa herencia de vistas para hacer cambios de manera modular.
+
+Ejemplo:
+
+```xml
+<record id="inherited_model_view_form" model="ir.ui.view">
+    <field name="name">inherited.model.form.inherit.test</field>
+    <field name="model">inherited.model</field>
+    <field name="inherit_id" ref="inherited.inherited_model_view_form"/>
+    <field name="arch" type="xml">
+        <xpath expr="//field[@name='description']" position="after">
+          <field name="new_field"/>
+        </xpath>
+    </field>
+</record>
+```
+
+**Ejercicio:**
+- Agregar `property_ids` en `base.view_users_form` dentro de una nueva página de notebook.
+
+---
+
+### **Conclusión**
+La herencia es fundamental en Odoo debido a su concepto modular. Es importante:
+
+- Usar `@api.model` para `create()`.
+- Preferir `@api.ondelete()` en vez de sobrescribir `unlink()`.
+- Llamar siempre a `super()` en métodos sobrescritos.
+- Aplicar correctamente la herencia de modelos y vistas.
+
+Con estos conceptos claros, podemos interactuar con otros módulos de Odoo de manera eficiente.
+
+

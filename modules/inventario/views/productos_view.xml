@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+   <record id="producto_action" model="ir.actions.act_window">
+        <field name="name">Productos</field>
+        <field name="res_model">producto</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <record id="producto_view_form" model="ir.ui.view">
+        <field name="name">producto.view.form</field>
+        <field name="model">producto</field>
+        <field name="arch" type="xml">
+            <form string="Productos">
+                <sheet>
+                    <notebook>
+                        <page name="info" string="Informacion">
+                            <group>
+                                <field name="name" />
+                                <field name="stock" readonly='1'/>
+
+                                <field name="estado" decoration-success="estado =='disponible'" decoration-danger="estado == 'agotado'" decoration-warning="estado== 'en_camino'" readonly='1'/>
+                            </group>
+                            <group name="price details" string="Detalles de precio  &amp; stock">
+                                <field name="precio_venta"/>
+                                <field name="precio_compra"/>
+                                <field name="proveedor_id"/>
+                                <field name="perecedero"  />
+                                <field name="vencimiento" invisible = "not perecedero"/>
+                            </group>
+                            
+                        </page>
+                        <page name="comprar" string="Comprar">
+                            <group name="name" >
+                               
+                                <field name="cantidad"/>
+                                <field  name="compra_total" string="Precio total :" />
+                                <field name="ubicacion_id"  options="{'no_create': True}"/>
+                                
+                            </group>
+                            <button  string="Comprar" name="action_comprar"  type="object" class="btn-primary"/>
+
+                            
+                        </page>
+                       
+                        <page name="vender" string="Vender">
+                            <group name="name" string="string">
+                                
+                                <field name="cantidad" string='Cantidad'/>
+                                <field name="venta_total" string="Precio total: " />
+                               
+                                <field name="ubicacion_id"/>
+                                <button name="action_vender" string="Vender" type="object" class="btn-secondary"/>
+                            </group>
+                            
+                            
+                        </page>
+                        <page name="ubicacion" string="Ubicacion del stock">
+                            <field name="ubicacion_ids" />
+                            
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="producto_view_tree" model="ir.ui.view">
+        <field name="name">producto.view.tree</field>
+        <field name="model">producto</field>
+        <field name="arch" type="xml">
+            <tree string="">
+                <field name="name"/>
+                <field name="stock"/>
+                <field name="estado"/>
+                <field name="proveedor_id" />
+            </tree>
+        </field>
+    </record>
+       
+
+</odoo>

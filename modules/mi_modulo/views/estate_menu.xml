@@ -1,0 +1,40 @@
+<odoo>
+    <!-- Menú principal -->
+    <menuitem id="test_menu_root" name="Estate Property" sequence="1"/>
+
+    <!-- Primer nivel -->
+    <menuitem 
+        id="test_first_level_menu" 
+        name="Opciones" 
+        parent="test_menu_root" 
+        sequence="2" 
+    />
+
+    <!-- Segundo nivel: Modelo principal -->
+    <menuitem 
+        id="menu_estate_properties" 
+        name="Estate Properties" 
+        parent="test_first_level_menu" 
+        action="test_model_action" 
+        sequence="1" 
+    />
+
+    <!-- Segundo nivel: Tipo de propiedades -->
+    <menuitem 
+        id="menu_estate_property_type" 
+        name="Property Types" 
+        parent="test_first_level_menu" 
+        action="action_estate_property_type" 
+        sequence="2" 
+    />
+
+    <!-- Segundo nivel: Tags de propiedades -->
+    <menuitem 
+        id="menu_estate_properties_tag" 
+        name="Property Tags" 
+        parent="test_first_level_menu" 
+        action="test_model_action_tag" 
+        sequence="3" 
+    />
+    
+</odoo>
