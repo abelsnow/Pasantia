@@ -87,9 +87,27 @@
                             <group name="info" string="Información de Venta">
                                 <field name="vendedor_id" string="Vendedor" />
                                 <field name="comprador_id" string="Comprador" />
-                                <field name="best_price" string="Mejor Oferta" />
-                                <field name="offer_ids" widget="many2many"
-                                    readonly="state in ['oferta_aceptada','vendido','cancelado']" />
+                                <field name="best_price" string="Mejor Oferta" widget="monetary" />
+                                <field name="offer_ids"
+                                    readonly="state in ['oferta_aceptada', 'vendido', 'cancelado']">
+                                    <tree string="Ofertas" editable="bottom"
+                                        decoration-danger="status == 'rechazado'"
+                                        decoration-success="status == 'aceptado'">
+                                        <field name="price" string="Precio" />
+                                        <field name="status" string="Estado" />
+                                        <button name="action_aceptar" string="Aceptar" type="object"
+                                            icon="fa-check"
+                                            invisible="status == 'aceptado' or status == 'rechazado'" />
+                                        <button name="action_rechazar" string="Rechazar"
+                                            type="object"
+                                            icon="fa-times"
+                                            invisible="status == 'aceptado' or status == 'rechazado'" />
+                                        <field name="validity" string="Validez" />
+                                        <field name="date_deadline" string="Fecha limite" />
+                                        <field name="partner_id" string="SocioID" />
+                                        <field name="property_id" string="PropiedadID" />
+                                    </tree>
+                                </field>
                             </group>
                         </page>
                         <field name="description" string="Descripción" />
@@ -210,28 +228,6 @@
         </field>
     </record>
 
-    <!-- ********************************************************************************** -->
-    <!-- View estate_property_offer -->
-    <!-- ********************************************************************************** -->
-    <record id="estate_property_offer_view_tree" model="ir.ui.view">
-        <field name="name">estate_property_offer.view.tree</field>
-        <field name="model">estate_property_offer</field>
-        <field name="arch" type="xml">
-            <tree string="Ofertas" editable="bottom" decoration-danger="status == 'rechazado'"
-                decoration-success="status == 'aceptado'">
-                <field name="price" string="Precio" />
-                <field name="status" string="Estado" />
-                <button name="action_aceptar" string="Aceptar" type="object"
-                    icon="fa-check" invisible="status == 'aceptado' or status == 'rechazado'" />
-                <button name="action_rechazar" string="Rechazar" type="object"
-                    icon="fa-times" invisible="status == 'aceptado' or status == 'rechazado'" />
-                <field name="validity" string="Validez" />
-                <field name="date_deadline" string="Fecha limite" />
-                <field name="partner_id" string="SocioID" />
-                <field name="property_id" string="PropiedadID" />
-            </tree>
-        </field>
-    </record>
 
     <!-- ********************************************************************************** -->
     <!-- View estate_property_inherited -->

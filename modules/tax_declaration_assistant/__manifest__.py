@@ -3,9 +3,9 @@
 
 
 {
-    'name': 'estate',
-    'version': '1.0',
-    'category': 'bienes y raices',
+    'name': 'tax_declaration_assistant',
+    'version': '0.1',
+    'category': 'Accounting',
     'sequence': 15,
     'summary': '',
     'website': '',
@@ -13,19 +13,14 @@
         'base',
     ],
     'data': [
-        'views/estate_property_views.xml',
-        'views/estate_menus.xml',
         'security/ir.model.access.csv',
+        'views/tax_declaration_assistant_menus.xml',
+        'views/tax_declaration_assistant_views.xml',
         
         ],
     'demo': [],
     'installable': True,
     'application': True,
-    'assets': {
-    'web.assets_backend': [
-        'estate/static/src/css/*',
-        ],
-    },
     'license': '',
 
 }

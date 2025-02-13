@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <menuitem
+        id="tax_declaration_assistant_menu"
+        name="Asistente de declaración de impuesto"
+        sequence="10" />
+
+</odoo>

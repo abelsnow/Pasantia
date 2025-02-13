@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<odoo>
+    <record id="estate_accounting_incidencia" model="ir.module.category">
+        <field name="name">Estate Accounting</field>
+        <field name="description">Gestión de usuarios para el módulo de estate_accounting</field>
+        <field name="sequence">100</field>
+    </record>
+
+    <record id="usuarios_admin" model="res.groups">
+        <field name="name">Usuarios administradores</field>
+        <field name="category_id" ref="estate_accounting_incidencia" />
+        <field name="comment">Usuarios administradores para estate_accounting</field>
+        <field name="implied_ids" eval="[(4, ref('base.group_system'))]" />
+    </record>
+</odoo>

@@ -45,7 +45,7 @@
 
 /* Mejor apariencia de etiquetas Many2Many */
 .o_field_widget.o_field_many2many_tags .o_tag_color_0 { 
-    background-color: #ff4081 !important; 
+    background-color: #ccc !important; 
     color: white;
     font-weight: bold;
     padding: 4px 8px;

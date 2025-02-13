@@ -151,9 +151,12 @@ class oferta(models.Model):
         for record in self:
             if record.property_id.state == 'vendido':
                 raise UserError("Ya se encuentra vendido")
+            
+            elif record.property_id.state == 'oferta_aceptada':
+                raise UserError("Esta propiedad ya tiene una oferta aceptada")
             else:
                 record.status = 'aceptado'
-                record.property_id.state = 'vendido'
+                record.property_id.state = 'oferta_aceptada'
                 record.property_id.selling_price = record.price
                 #record.property_id.vendedor_id = record.partner_id.id
                 record._check_price()
@@ -162,7 +165,6 @@ class oferta(models.Model):
     def action_rechazar(self):
         for record in self:
             record.status = 'rechazado'
-            record.property_id.state = 'cancelado'
             #record.property_id.selling_price = 0
 
     @api.constrains('price', 'property_id.expected_price', 'property_id.selling_price')

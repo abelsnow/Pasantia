@@ -1,0 +1,25 @@
+Mantener el código estate
+---Lógica
++Al aceptar una oferta se marca como vendido, pero no se genera una factura (solo al vender con el botón vender)
++Al aceptar debería de marcar como oferta aceptada, no como vendido
+-Revisar los tipos de oferta (related)
+
+---Vista
++Al agregar una oferta nueva, no se ve en modo editable
+
+---Ayuda
+#El botón Draft (resotre to draft) se encuentra en el archivo account_move_views.xml en la línea 711
+
+
+
+
+
+
+
+
+
+
+
+
+cd odoo
+py odoo-bin -c C:\Users\Usuario\Desktop\code\odoo\debian\odoo.conf -u estate_accounting

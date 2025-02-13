@@ -17,5 +17,10 @@
     # any module necessary for this one to work correctly
     'depends': ['estate', 'account'],
 
+    'data': [
+        'security/groups.xml',
+        'views/account_move_inherit.xml',
+    ]
+
 }
 
