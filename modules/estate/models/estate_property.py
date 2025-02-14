@@ -31,7 +31,7 @@ class TestModel(models.Model):
     comprador_id = fields.Many2one('res.partner', string='comprador')
     offer_ids = fields.One2many('estate_property_offer', 'property_id', string='offer_ids')
     total_area = fields.Integer(compute="_compute_total", string="area total")
-    best_price = fields.Float(compute="_compute_best_price", string="mejor precio")
+    best_price = fields.Float(compute="_compute_best_price", string="mejor precio", store=True)
     _sql_constraints = [
         ('expected_price_positive', 'CHECK(expected_price > 0)', 'El precio debe ser estrictamente mayor que cero'),
         ('selling_price_positive', 'CHECK(selling_price >= 0)', 'El precio de venta debe ser mayor o igual a cero'),
@@ -100,7 +100,7 @@ class tipo(models.Model):
     def open_type_offer_related_action(self):
         return {
             "type": "ir.actions.act_window",
-            "name": "type_offer_related_action",
+            "name": "Ofertas del Tipo",
             "res_model": "estate_property_offer",
             "view_mode": "tree,form",
             "domain": [("property_type_id", "=", self.id)],
@@ -133,19 +133,19 @@ class oferta(models.Model):
 
     price = fields.Float()
     status = fields.Selection([('aceptado','Aceptado'),('rechazado','Rechazado')], copy=False, readonly=True)
-    validity = fields.Integer(inverse="_inverse_validity", string="validez de la oferta")
-    date_deadline = fields.Date(string="fecha limite de la oferta")
+    validity = fields.Integer(string="validez de la oferta")
+    date_deadline = fields.Date(string="fecha limite de la oferta", compute='_compute_validity', default=lambda self: datetime.today())
     partner_id = fields.Many2one('res.partner', string='Cliente', required=True)
-    property_id = fields.Many2one('test_model', string='Propiedad', required=True)
+    property_id = fields.Many2one('test_model', string='Propiedad', required=True, ondelete='cascade')
     property_type_id = fields.Many2one('estate_property_type', string='Ofertas del tipo')
-    offer_type = fields.Char(related='property_type_id.name')
+    offer_type = fields.Char(related='property_type_id.name', default=lambda self: self.property_type_id.name)
     active_id = fields.Boolean(related='property_id.active')
     _sql_constraints = [('price_positive','CHECK(price > 0)','El precio debe ser estrictamente mayor que cero')]
 
     @api.depends('validity')
-    def _inverse_validity(self):
+    def _compute_validity(self):
         for record in self:
-            record.date_deadline = record.date_deadline.today() + timedelta(days=record.validity)
+            record.date_deadline = datetime.today() + timedelta(days=record.validity)
 
     def action_aceptar(self):
         for record in self:
@@ -154,6 +154,10 @@ class oferta(models.Model):
             
             elif record.property_id.state == 'oferta_aceptada':
                 raise UserError("Esta propiedad ya tiene una oferta aceptada")
+            
+            elif record.property_id.state == 'cancelado':
+                raise UserError("Esta propiedad se encuentra en estado cancelado")
+            
             else:
                 record.status = 'aceptado'
                 record.property_id.state = 'oferta_aceptada'
@@ -165,7 +169,6 @@ class oferta(models.Model):
     def action_rechazar(self):
         for record in self:
             record.status = 'rechazado'
-            #record.property_id.selling_price = 0
 
     @api.constrains('price', 'property_id.expected_price', 'property_id.selling_price')
     def _check_price(self):

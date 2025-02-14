@@ -1,14 +1,34 @@
 Mantener el código estate
 ---Lógica
-+Al aceptar una oferta se marca como vendido, pero no se genera una factura (solo al vender con el botón vender)
-+Al aceptar debería de marcar como oferta aceptada, no como vendido
--Revisar los tipos de oferta (related)
++ Al aceptar debería de marcar como oferta aceptada, no como vendido
+- Revisar los tipos de oferta (related)
+- Lo que está en la factura generada debe estar en español
+- El vendedor no debe ser OdooBot
++ Poner una restricción para que no pueda aceptar ofertas a propiedades en estado cancelado
+- Revisar los colores de los tags
+- No se ven los colores de los tags en el Kanban
+- Reparar Tipos de Propiedad
+- No se pueden borrar las propiedades en Tipos de Propiedad
+-? Al rechazar una oferta, si es la mejor oferta, se queda el precio de la mejor oferta
 
 ---Vista
-+Al agregar una oferta nueva, no se ve en modo editable
++ Al agregar una oferta nueva, no se ve en modo editable
++ El statusbar del estado de la propiedad se puede editar, no debería (sacar clickable)
++ Al poner la validez se debe autocompletar la fecha desde la fecha en que se realiza y que la fecha sea readonly
++ Refactorizar en vez de test a estate properties o algo así y lo mismo con types y tags
++ Botones aceptar y rechazar se colocan sobre la validez al agregar una oferta nueva en propiedad con ofertas rechazadas
+
+---Código
+- Refactorizar "test_model" por "estate_property"
+- Cambiar todos los guiones bajos por puntos (_ por .)
+
+---Añadir
+- Posibilidad de subir una o varias imágenes de la propiedad
+- Hacer que el comprador tenga su propia visualización aparte del vendedor
+- Que los colores de las propiedades con oferta recibida o aceptada se puedan ver en el Kanban
 
 ---Ayuda
-#El botón Draft (resotre to draft) se encuentra en el archivo account_move_views.xml en la línea 711
+# El botón Draft (resotre to draft) se encuentra en el archivo account_move_views.xml en la línea 711
 
 
 
@@ -22,4 +42,4 @@ Mantener el código estate
 
 
 cd odoo
-py odoo-bin -c C:\Users\Usuario\Desktop\code\odoo\debian\odoo.conf -u estate_accounting
+py odoo-bin -c C:\Users\Usuario\Desktop\code\odoo\debian\odoo.conf -u estate
