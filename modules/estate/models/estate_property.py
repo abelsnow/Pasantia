@@ -27,7 +27,7 @@ class TestModel(models.Model):
     state = fields.Selection([('nuevo','Nuevo'),('oferta_recibida','Oferta recibida'),('oferta_aceptada','Oferta aceptada'),('vendido','Vendido'),('cancelado','Cancelado')], default = 'nuevo', required = True)
     tag_ids = fields.Many2many('estate_property_tag', string='tags')
     type_id = fields.Many2one('estate_property_type', string='types')
-    vendedor_id = fields.Many2one('res.partner', string='vendedor', default = lambda self: self.env.user, readonly=True)
+    vendedor_id = fields.Many2one('res.users', string='vendedor', default = lambda self: self.env.user, readonly=True)
     comprador_id = fields.Many2one('res.partner', string='comprador')
     offer_ids = fields.One2many('estate_property_offer', 'property_id', string='offer_ids')
     total_area = fields.Integer(compute="_compute_total", string="area total")
@@ -138,7 +138,7 @@ class oferta(models.Model):
     partner_id = fields.Many2one('res.partner', string='Cliente', required=True)
     property_id = fields.Many2one('test_model', string='Propiedad', required=True, ondelete='cascade')
     property_type_id = fields.Many2one('estate_property_type', string='Ofertas del tipo')
-    offer_type = fields.Char(related='property_type_id.name', default=lambda self: self.property_type_id.name)
+    offer_type = fields.Char(related='property_type_id.name')
     active_id = fields.Boolean(related='property_id.active')
     _sql_constraints = [('price_positive','CHECK(price > 0)','El precio debe ser estrictamente mayor que cero')]
 
@@ -162,7 +162,6 @@ class oferta(models.Model):
                 record.status = 'aceptado'
                 record.property_id.state = 'oferta_aceptada'
                 record.property_id.selling_price = record.price
-                #record.property_id.vendedor_id = record.partner_id.id
                 record._check_price()
             return True
 
