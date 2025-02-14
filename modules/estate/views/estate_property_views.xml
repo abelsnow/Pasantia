@@ -112,6 +112,13 @@
                                 </field>
                             </group>
                         </page>
+                        <page string="Imagen de la propiedad">
+                            <group name="name" string="Imagenes de la propiedad">
+                                <field name="imagen_1" widget="image" />
+                                <field name="imagen_2" widget="image" />
+                                <field name="imagen_3" widget="image" />
+                            </group>
+                        </page>
                         <field name="description" string="Descripción" />
                     </notebook>
                 </sheet>
@@ -303,7 +310,8 @@
                                     </t>
                                     <div>
                                         <strong> Tags :</strong>
-                                        <field name="tag_ids" widget="many2many_tags" />
+                                        <field name="tag_ids" widget="many2many_tags"
+                                            options="{'color_field': 'color', 'no_edit_color': true}" />
                                     </div>
                                 </div>
                             </div>
